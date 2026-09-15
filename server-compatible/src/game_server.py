@@ -236,6 +236,24 @@ class GameServer:
             player_id = owner.get("playerId")
             result = self.store.award_recruit(owner["uid"], int(player_id) if player_id is not None else 0, route.rsplit(".", 1)[-1])
             return (result if result is not None else self._error()), owner
+        if route == "logic.smapHandler.beginSmap":
+            if set(body) != {"smapId", "teamIndexs"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.begin_smap(
+                owner["uid"], int(player_id) if player_id is not None else 0,
+                body.get("smapId"), body.get("teamIndexs"),
+            )
+            return (result if result is not None else self._error()), owner
+        if route == "logic.smapHandler.endSmap":
+            if set(body) != {"star", "teamIndexs"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.end_smap(
+                owner["uid"], int(player_id) if player_id is not None else 0,
+                body.get("star"), body.get("teamIndexs"),
+            )
+            return (result if result is not None else self._error()), owner
         return self._error(), owner
 
 

@@ -12,6 +12,7 @@ import json
 import secrets
 import sqlite3
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +37,16 @@ _FIRST_RECRUIT_ROLES: dict[str, dict[str, Any]] = {
         "skills": {"100301": {"kindId": 100301, "level": 1}}, "awakeSkills": {}, "awakeRateIncreaseTimes": 0,
     },
 }
+
+_FIRST_SMAP_ID = 10101
+_FIRST_SMAP_AP = 6
+_FIRST_SMAP_ATTEMPTS = 10
+_FIRST_SMAP_COIN = 1200
+_FIRST_SMAP_PLAYER_XP = 6
+_FIRST_SMAP_ROLE_XP = 20
+# Local compatibility policy: enough for a lab playthrough, finite so an
+# abandoned client-local simulation cannot block the player permanently.
+_SMAP_PENDING_TTL_SECONDS = 30 * 60
 
 
 def encode_player(player: dict[str, Any]) -> str:
@@ -66,6 +77,12 @@ class PlayerStore:
                     uid TEXT NOT NULL REFERENCES accounts(uid),
                     server_id INTEGER NOT NULL, payload TEXT NOT NULL,
                     UNIQUE(uid, server_id)
+                );
+                CREATE TABLE IF NOT EXISTS smap_pending (
+                    player_id INTEGER PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+                    uid TEXT NOT NULL, server_id INTEGER NOT NULL,
+                    smap_id INTEGER NOT NULL, team_indices TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL
                 );
                 """
             )
@@ -121,7 +138,7 @@ class PlayerStore:
         stamp = now.strftime("%Y-%m-%d %H:%M:%S")
         return {
             "id": player_id, "userName": name, "name": name, "serverId": server_id, "oldServerId": old_server_id,
-            "level": 1, "power": 0, "gem": 50, "coin": 0, "actionPoint": 60, "skillPoint": 10, "timesMaxMap": {"actionPoint": 60, "skillPoint": 10}, "nextRecoverTimeMap": {"actionPoint": 0, "skillPoint": 0},
+            "level": 1, "experience": 0, "nextLevelExp": 25, "power": 0, "gem": 50, "coin": 0, "actionPoint": 60, "skillPoint": 10, "timesMaxMap": {"actionPoint": 60, "skillPoint": 10}, "nextRecoverTimeMap": {"actionPoint": 0, "skillPoint": 0},
             "smapStarMap": {"1": {"101": {"10101": 0, "10106": 0}}},
             "smapTimesMap": {"1": {"101": {"10101": 0, "10106": 0}}},
             "photoInfo": {"photoImgId": 1001, "shipImgId": 901}, "bag": {"items": {}},
@@ -180,6 +197,10 @@ class PlayerStore:
     def _normalize_existing(self, player_id: int, payload: str) -> dict[str, Any]:
         player = json.loads(payload)
         changed = False
+        for key, value in (("experience", 0), ("nextLevelExp", 25)):
+            if key not in player:
+                player[key] = value
+                changed = True
         smap_fixture = {"1": {"101": {"10101": 0, "10106": 0}}}
         for key in ("smapStarMap", "smapTimesMap"):
             if not isinstance(player.get(key), dict):
@@ -324,6 +345,174 @@ class PlayerStore:
                     response["point"] = {"freeCoinTimes": point.get("freeCoinTimes", 0), "nextCoinFreeTime": point.get("nextCoinFreeTime", 0)}
                 else:
                     response["point"] = {"isPayGemFirst": point.get("isPayGemFirst", False), "nextGemFreeTime": point.get("nextGemFreeTime", 0)}
+                return response
+            except Exception:
+                self.db.rollback()
+                raise
+
+    @staticmethod
+    def _canonical_team_indices(team_indices: Any) -> tuple[str, ...] | None:
+        if not isinstance(team_indices, list) or not 1 <= len(team_indices) <= 5:
+            return None
+        if any(not isinstance(index, str) or not index for index in team_indices):
+            return None
+        if len(set(team_indices)) != len(team_indices):
+            return None
+        return tuple(sorted(team_indices))
+
+    @staticmethod
+    def _first_battle_role_supported(role: Any) -> bool:
+        if not isinstance(role, dict):
+            return False
+        scalar_types = {
+            "kindId": int, "level": int, "star": int, "awakeLevel": int,
+            "experience": int, "nextLevelExp": int, "power": (int, float), "mp": (int, float),
+        }
+        for key, expected in scalar_types.items():
+            value = role.get(key)
+            if isinstance(value, bool) or not isinstance(value, expected):
+                return False
+        if role["level"] != 1 or role["experience"] != 0 or role["nextLevelExp"] != 25:
+            return False
+        attr = role.get("attr")
+        if not isinstance(attr, dict):
+            return False
+        if any(isinstance(attr.get(key), bool) or not isinstance(attr.get(key), (int, float))
+               for key in ("hp", "atk", "def", "mdef", "hit", "dodge", "crit")):
+            return False
+        return isinstance(role.get("skills"), dict) and isinstance(role.get("awakeSkills"), dict)
+
+    def begin_smap(self, uid: str, player_id: int, smap_id: Any, team_indices: Any, server_id: int = 1) -> dict[str, Any] | None:
+        """Begin only APK SMAP 10101; combat itself remains client-simulated."""
+        canonical = self._canonical_team_indices(team_indices)
+        if type(player_id) is not int or player_id <= 0 or type(smap_id) is not int or smap_id != _FIRST_SMAP_ID or canonical is None:
+            return None
+        encoded_indices = json.dumps(canonical, separators=(",", ":"))
+        now = int(time.time())
+        with self.lock:
+            try:
+                self.db.execute("BEGIN IMMEDIATE")
+                row = self.db.execute(
+                    "SELECT id,payload FROM players WHERE id=? AND uid=? AND server_id=?",
+                    (player_id, uid, server_id),
+                ).fetchone()
+                if row is None:
+                    self.db.rollback()
+                    return None
+                player = self._normalize_existing(int(row[0]), row[1])
+                pending = self.db.execute(
+                    "SELECT smap_id,team_indices,expires_at FROM smap_pending WHERE player_id=?",
+                    (player_id,),
+                ).fetchone()
+                if pending is not None and int(pending[2]) <= now:
+                    self.db.execute("DELETE FROM smap_pending WHERE player_id=?", (player_id,))
+                    pending = None
+                if pending is not None:
+                    if int(pending[0]) == smap_id and pending[1] == encoded_indices:
+                        self.db.commit()
+                        return {"code": 200, "actionPoint": player["actionPoint"], "_temp": {"showEntityIdsMap": {}}}
+                    self.db.rollback()
+                    return None
+
+                stars = player.get("smapStarMap", {}).get("1", {}).get("101", {}).get("10101")
+                attempts = player.get("smapTimesMap", {}).get("1", {}).get("101", {}).get("10101")
+                action_point = player.get("actionPoint")
+                roles = player.get("team", {}).get("roles")
+                player_xp = player.get("experience")
+                if (type(stars) is not int or stars != 0 or type(attempts) is not int
+                        or not 0 <= attempts < _FIRST_SMAP_ATTEMPTS
+                        or type(action_point) is not int or action_point < _FIRST_SMAP_AP
+                        or type(player.get("level")) is not int or player["level"] != 1
+                        or type(player_xp) is not int or not 0 <= player_xp <= 18
+                        or player.get("nextLevelExp") != 25 or not isinstance(roles, dict)
+                        or any(index not in roles or not self._first_battle_role_supported(roles[index]) for index in canonical)):
+                    self.db.rollback()
+                    return None
+                player["actionPoint"] = action_point - _FIRST_SMAP_AP
+                self.db.execute(
+                    "INSERT INTO smap_pending(player_id,uid,server_id,smap_id,team_indices,expires_at) VALUES(?,?,?,?,?,?)",
+                    (player_id, uid, server_id, smap_id, encoded_indices, now + _SMAP_PENDING_TTL_SECONDS),
+                )
+                serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
+                self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, player_id))
+                self.db.commit()
+                return {"code": 200, "actionPoint": player["actionPoint"], "_temp": {"showEntityIdsMap": {}}}
+            except Exception:
+                self.db.rollback()
+                raise
+
+    def end_smap(self, uid: str, player_id: int, star: Any, team_indices: Any, server_id: int = 1) -> dict[str, Any] | None:
+        """Settle one live 10101 pending record from the APK's client-reported star."""
+        canonical = self._canonical_team_indices(team_indices)
+        if type(player_id) is not int or player_id <= 0 or type(star) is not int or not 0 <= star <= 3 or canonical is None:
+            return None
+        encoded_indices = json.dumps(canonical, separators=(",", ":"))
+        now = int(time.time())
+        with self.lock:
+            try:
+                self.db.execute("BEGIN IMMEDIATE")
+                row = self.db.execute(
+                    "SELECT id,payload FROM players WHERE id=? AND uid=? AND server_id=?",
+                    (player_id, uid, server_id),
+                ).fetchone()
+                if row is None:
+                    self.db.rollback()
+                    return None
+                pending = self.db.execute(
+                    "SELECT smap_id,team_indices,expires_at,uid,server_id FROM smap_pending WHERE player_id=?",
+                    (player_id,),
+                ).fetchone()
+                if pending is None:
+                    self.db.rollback()
+                    return None
+                if int(pending[2]) <= now:
+                    self.db.execute("DELETE FROM smap_pending WHERE player_id=?", (player_id,))
+                    self.db.commit()
+                    return None
+                if (int(pending[0]) != _FIRST_SMAP_ID or pending[1] != encoded_indices
+                        or pending[3] != uid or int(pending[4]) != server_id):
+                    self.db.rollback()
+                    return None
+
+                player = json.loads(row[1])
+                times_type_one = player["smapTimesMap"]["1"]
+                stage_times = times_type_one["101"]
+                attempts = stage_times.get("10101")
+                if type(attempts) is not int or not 0 <= attempts < _FIRST_SMAP_ATTEMPTS:
+                    self.db.rollback()
+                    return None
+                stage_times["10101"] = attempts + 1
+                response: dict[str, Any] = {
+                    "code": 200,
+                    "actionPoint": player["actionPoint"],
+                    "smapTimesMap": {"1": copy.deepcopy(times_type_one)},
+                    "_temp": {"entityCountMap": {}},
+                }
+                if star > 0:
+                    roles = player.get("team", {}).get("roles")
+                    if (not isinstance(roles, dict)
+                            or any(index not in roles or not self._first_battle_role_supported(roles[index]) for index in canonical)
+                            or type(player.get("coin")) is not int or type(player.get("experience")) is not int
+                            or player.get("nextLevelExp") != 25
+                            or player["smapStarMap"]["1"]["101"].get("10101") != 0):
+                        self.db.rollback()
+                        return None
+                    player["coin"] += _FIRST_SMAP_COIN
+                    player["experience"] += _FIRST_SMAP_PLAYER_XP
+                    for index in canonical:
+                        roles[index]["experience"] += _FIRST_SMAP_ROLE_XP
+                    star_type_one = player["smapStarMap"]["1"]
+                    star_type_one["101"]["10101"] = star
+                    response.update({
+                        "coin": player["coin"],
+                        "experience": player["experience"],
+                        "smapStarMap": {"1": copy.deepcopy(star_type_one)},
+                        "team": {"roles": {index: copy.deepcopy(roles[index]) for index in canonical}},
+                    })
+                self.db.execute("DELETE FROM smap_pending WHERE player_id=?", (player_id,))
+                serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
+                self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, player_id))
+                self.db.commit()
                 return response
             except Exception:
                 self.db.rollback()
