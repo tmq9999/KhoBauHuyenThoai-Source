@@ -203,10 +203,11 @@ class _BootstrapHandler(BaseHTTPRequestHandler):
 class _Server(ThreadingHTTPServer):
     allow_reuse_address = True
 
-    def __init__(self, manifest_path: Path, port: int):
+    def __init__(self, manifest_path: Path, port: int, account_service: Any | None = None):
         self.manifest, self.manifest_bytes = _load_lab_manifest_bytes(manifest_path)
         self.accounts: dict[str, _Account] = {}
         self.account_lock = threading.RLock()
+        self.account_service = account_service
         self.counts: dict[tuple[str, str, int], int] = {}
         super().__init__((LOOPBACK_HOST, port), _BootstrapHandler)
 
@@ -225,6 +226,8 @@ class _Server(ThreadingHTTPServer):
             return account.uid, account.token
 
     def register_account(self, name: str, password: str) -> bool:
+        if self.account_service is not None:
+            return self.account_service.register_account(name, password)
         with self.account_lock:
             account = self.accounts.get(name)
             if account is not None:
@@ -233,6 +236,8 @@ class _Server(ThreadingHTTPServer):
             return True
 
     def login_account(self, name: str, password: str) -> tuple[str, str] | None:
+        if self.account_service is not None:
+            return self.account_service.login_account(name, password)
         with self.account_lock:
             account = self.accounts.get(name)
             if account is None:
@@ -242,6 +247,21 @@ class _Server(ThreadingHTTPServer):
             if not hmac.compare_digest(account.digest, digest):
                 return None
             return account.uid, account.token
+
+    def authenticate_token(self, token: str) -> dict[str, str] | None:
+        if self.account_service is not None:
+            return self.account_service.authenticate_token(token)
+        with self.account_lock:
+            for account in self.accounts.values():
+                if hmac.compare_digest(account.token, token):
+                    return {"uid": account.uid, "name": next(name for name, item in self.accounts.items() if item is account)}
+        return None
+
+    def has_uid(self, uid: str) -> bool:
+        if self.account_service is not None:
+            return self.account_service.has_uid(uid)
+        with self.account_lock:
+            return any(account.uid == uid for account in self.accounts.values())
 
     def record(self, method: str, path: str, status: int) -> None:
         key = (method, path, status)
@@ -257,8 +277,8 @@ class BootstrapHTTPServer:
         self.host, self.port = httpd.server_address
 
     @classmethod
-    def start_in_thread(cls, manifest_path: Path, port: int = 0) -> "BootstrapHTTPServer":
-        httpd = _Server(Path(manifest_path), port)
+    def start_in_thread(cls, manifest_path: Path, port: int = 0, account_service: Any | None = None) -> "BootstrapHTTPServer":
+        httpd = _Server(Path(manifest_path), port, account_service)
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
         return cls(httpd, thread)
@@ -267,6 +287,12 @@ class BootstrapHTTPServer:
         self._httpd.shutdown()
         self._httpd.server_close()
         self._thread.join(timeout=2)
+
+    def authenticate_token(self, token: str) -> dict[str, str] | None:
+        return self._httpd.authenticate_token(token)
+
+    def has_uid(self, uid: str) -> bool:
+        return self._httpd.has_uid(uid)
 
 
 def main() -> int:
