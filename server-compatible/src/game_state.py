@@ -298,8 +298,15 @@ class PlayerStore:
                     defaults = ({"freeCoinTimes": 1, "nextCoinFreeTime": 0} if route == "coin"
                                 else {"isPayGemFirst": True, "nextGemFreeTime": 0})
                     for key, value in defaults.items():
-                        if key not in point:
-                            point[key] = value
+                        current = point.get(key)
+                        if key == "freeCoinTimes":
+                            reconciled = max(current, 1) if type(current) is int else 1
+                        elif key == "isPayGemFirst":
+                            reconciled = True
+                        else:
+                            reconciled = current if key in point else value
+                        if key not in point or current != reconciled:
+                            point[key] = reconciled
                             marker_changed = True
                     if marker_changed:
                         serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))

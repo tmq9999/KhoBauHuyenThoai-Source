@@ -118,7 +118,7 @@ def test_concurrent_first_renames_cannot_both_replace_the_initial_name(tmp_path)
 
 
 PROJECT_SOURCE = pathlib.Path(__file__).parents[3] / "client-recovered" / "src" / "project.js"
-STARTER_VALUES = pathlib.Path(__file__).parents[3] / "work" / "apk-vn" / "20260915T001024Z-game-entry" / "starter-values.json"
+STARTER_VALUES = pathlib.Path(__file__).parent / "fixtures" / "starter-values.json"
 
 
 def _pinned_table(name: str):
@@ -476,6 +476,42 @@ def test_existing_recruits_reconcile_absent_completion_markers_without_renewing_
             "freeCoinTimes": 1, "isPayGemFirst": True,
             "nextCoinFreeTime": 123, "nextGemFreeTime": 456, "other": 9,
         }
+    finally:
+        store.close()
+
+
+def test_existing_recruits_reconcile_false_and_zero_completion_markers(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _ = store.login_account("alice", "secret")
+        player = store.create(uid, "alice", 1, 1)
+        player["team"]["roles"]["2"] = _starter_role(100201)
+        player["team"]["roles"]["3"] = _starter_role(100301)
+        player["point"].update({"freeCoinTimes": 0, "isPayGemFirst": False})
+        store.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(player), player["id"]))
+        store.db.commit()
+        assert store.award_recruit(uid, player["id"], "coin")["point"]["freeCoinTimes"] == 1
+        assert store.award_recruit(uid, player["id"], "gem")["point"]["isPayGemFirst"] is True
+        point = store.get_owned(uid, player["id"])["point"]
+        assert point["freeCoinTimes"] == 1
+        assert point["isPayGemFirst"] is True
+        assert point["nextCoinFreeTime"] == player["point"]["nextCoinFreeTime"]
+        assert point["nextGemFreeTime"] == player["point"]["nextGemFreeTime"]
+    finally:
+        store.close()
+
+
+def test_existing_coin_recruit_retains_higher_free_counter(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _ = store.login_account("alice", "secret")
+        player = store.create(uid, "alice", 1, 1)
+        player["team"]["roles"]["2"] = _starter_role(100201)
+        player["point"]["freeCoinTimes"] = 4
+        store.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(player), player["id"]))
+        store.db.commit()
+        assert store.award_recruit(uid, player["id"], "coin")["point"]["freeCoinTimes"] == 4
+        assert store.get_owned(uid, player["id"])["point"]["freeCoinTimes"] == 4
     finally:
         store.close()
 

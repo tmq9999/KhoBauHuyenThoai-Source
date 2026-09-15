@@ -1,0 +1,27 @@
+{
+  "provenance": {
+    "copiedFrom": "work/apk-vn/20260915T001024Z-game-entry/starter-values.json",
+    "sourceSha256": "BC51A6C719F88133754CC96446C29D89AB0690BCEE783C7CCCE88CA632FA02F6",
+    "scope": "Exact completeLevel1RoleFixture records used by tracked protocol tests"
+  },
+  "completeLevel1RoleFixture": {
+    "100201": {
+      "kindId": 100201, "level": 1, "star": 1, "awakeLevel": 0,
+      "experience": 0, "nextLevelExp": 25, "power": 0, "mp": 0,
+      "attr": { "hp": 1752, "atk": 127, "def": 156, "mdef": 156, "hit": 100, "dodge": 28, "crit": 40 },
+      "initAttr": { "hp": 1201, "atk": 47, "def": 105, "mdef": 105, "hit": 100, "dodge": 0, "crit": 0 },
+      "equipmentsAttr": { "hp": 551, "atk": 80, "def": 51, "mdef": 51, "hit": 0, "dodge": 28, "crit": 40 },
+      "equipments": { "evlItem_1": { "kindId": 30101, "level": 1 }, "evlItem_2": { "kindId": 30201, "level": 1 }, "evlItem_3": { "kindId": 30301, "level": 1 }, "evlItem_4": { "kindId": 30401, "level": 1 }, "evlItem_5": { "kindId": 30501, "level": 1 }, "evlItem_6": { "kindId": 30601, "level": 1 } },
+      "skills": { "100201": { "kindId": 100201, "level": 1 } }, "awakeSkills": {}, "awakeRateIncreaseTimes": 0
+    },
+    "100301": {
+      "kindId": 100301, "level": 1, "star": 1, "awakeLevel": 0,
+      "experience": 0, "nextLevelExp": 25, "power": 0, "mp": 0,
+      "attr": { "hp": 1372, "atk": 181, "def": 147, "mdef": 147, "hit": 100, "dodge": 28, "crit": 40 },
+      "initAttr": { "hp": 821, "atk": 101, "def": 96, "mdef": 96, "hit": 100, "dodge": 0, "crit": 0 },
+      "equipmentsAttr": { "hp": 551, "atk": 80, "def": 51, "mdef": 51, "hit": 0, "dodge": 28, "crit": 40 },
+      "equipments": { "evlItem_1": { "kindId": 30101, "level": 1 }, "evlItem_2": { "kindId": 30201, "level": 1 }, "evlItem_3": { "kindId": 30301, "level": 1 }, "evlItem_4": { "kindId": 30401, "level": 1 }, "evlItem_5": { "kindId": 30501, "level": 1 }, "evlItem_6": { "kindId": 30601, "level": 1 } },
+      "skills": { "100301": { "kindId": 100301, "level": 1 } }, "awakeSkills": {}, "awakeRateIncreaseTimes": 0
+    }
+  }
+}
