@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+import copy
 import gzip
 import json
 import pathlib
@@ -117,6 +118,7 @@ def test_concurrent_first_renames_cannot_both_replace_the_initial_name(tmp_path)
 
 
 PROJECT_SOURCE = pathlib.Path(__file__).parents[3] / "client-recovered" / "src" / "project.js"
+STARTER_VALUES = pathlib.Path(__file__).parents[3] / "work" / "apk-vn" / "20260915T001024Z-game-entry" / "starter-values.json"
 
 
 def _pinned_table(name: str):
@@ -124,6 +126,11 @@ def _pinned_table(name: str):
     start = source.index(f'"{name}");\nt.exports = [') + len(f'"{name}");\nt.exports = ')
     end = source.index("];\ncc._RF.pop();", start) + 1
     return json.loads(source[start:end])
+
+
+def _starter_role(kind_id: int):
+    values = json.loads(STARTER_VALUES.read_text(encoding="utf-8"))
+    return values["completeLevel1RoleFixture"][str(kind_id)]
 
 
 def test_create_is_idempotent_persists_and_encodes_home_candidate(tmp_path):
@@ -270,14 +277,14 @@ def test_award_first_recruits_merges_luffy_and_persists_idempotently(tmp_path):
         player = store.create(uid, "alice", 1, 1)
         first = store.award_recruit(uid, player["id"], "coin")
         assert first["code"] == 200
-        assert first["team"]["roles"]["2"]["kindId"] == 100201
+        assert first["team"]["roles"]["2"] == _starter_role(100201)
         assert first["_temp"]["dropList"] == [{"entityId": 100201, "count": 1, "extra": {"star": 1}}]
         assert store.get_owned(uid, player["id"])["team"]["roles"].keys() == {"1", "2"}
         assert store.get_owned(uid, player["id"])["point"]["freeCoinTimes"] == 1
         replay = store.award_recruit(uid, player["id"], "coin")
         assert replay == first
         second = store.award_recruit(uid, player["id"], "gem")
-        assert second["team"]["roles"]["3"]["kindId"] == 100301
+        assert second["team"]["roles"]["3"] == _starter_role(100301)
         assert store.get_owned(uid, player["id"])["team"]["roles"].keys() == {"1", "2", "3"}
         assert store.get_owned(uid, player["id"])["gem"] == 50
         assert store.award_recruit(uid, player["id"], "gem") == second
@@ -354,3 +361,138 @@ def test_recruit_awards_survive_store_reopen(tmp_path):
         assert persisted["point"]["isPayGemFirst"] is True
     finally:
         reopened.close()
+
+
+@pytest.mark.parametrize("reader_name,mutation", [("get_owned", "rename"), ("create", "recruit")])
+def test_normalization_serializes_with_other_store_mutations(tmp_path, monkeypatch, reader_name, mutation):
+    path = tmp_path / "players.sqlite3"
+    normalizer, writer = PlayerStore(path), PlayerStore(path)
+    try:
+        uid, _ = normalizer.login_account("alice", "secret")
+        player = normalizer.create(uid, "alice", 1, 1)
+        legacy = json.loads(json.dumps(player))
+        legacy["extra"].pop("chat")
+        normalizer.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(legacy), player["id"]))
+        normalizer.db.commit()
+        selected = threading.Event()
+        mutation_done = threading.Event()
+        original_normalize = normalizer._normalize_existing
+
+        def pause_after_select(player_id, payload):
+            selected.set()
+            mutation_done.wait(0.5)
+            return original_normalize(player_id, payload)
+
+        monkeypatch.setattr(normalizer, "_normalize_existing", pause_after_select)
+
+        def mutate():
+            try:
+                if mutation == "rename":
+                    return writer.rename(uid, player["id"], "Nami")
+                return writer.award_recruit(uid, player["id"], "coin")
+            finally:
+                mutation_done.set()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            if reader_name == "get_owned":
+                read = pool.submit(normalizer.get_owned, uid, player["id"])
+            else:
+                read = pool.submit(normalizer.create, uid, "alice", 1, 1)
+            assert selected.wait(2)
+            write = pool.submit(mutate)
+            read.result(timeout=5)
+            assert write.result(timeout=5) is not None
+        current = normalizer.get_owned(uid, player["id"])
+        assert current["extra"]["chat"] == {"worldList": [], "guildList": [], "allServerList": []}
+        if mutation == "rename":
+            assert current["name"] == "Nami"
+        else:
+            assert current["team"]["roles"]["2"]["kindId"] == 100201
+    finally:
+        normalizer.close()
+        writer.close()
+
+
+def test_partial_smap_maps_are_recursively_completed_without_losing_progress(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _ = store.login_account("alice", "secret")
+        player = store.create(uid, "alice", 1, 1)
+        player["smapStarMap"] = {"1": {"101": {"10101": 3, "extra": 7}}, "2": {"kept": True}}
+        player["smapTimesMap"] = {"1": {"other": {"kept": 9}}}
+        store.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(player), player["id"]))
+        store.db.commit()
+        migrated = store.get_owned(uid, player["id"])
+        assert migrated["smapStarMap"] == {
+            "1": {"101": {"10101": 3, "10106": 0, "extra": 7}}, "2": {"kept": True}
+        }
+        assert migrated["smapTimesMap"] == {
+            "1": {"other": {"kept": 9}, "101": {"10101": 0, "10106": 0}}
+        }
+    finally:
+        store.close()
+
+
+@pytest.mark.parametrize("reader_name", ["get_owned", "create"])
+def test_failed_normalization_rolls_back_transaction_for_next_operation(tmp_path, reader_name):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _ = store.login_account("alice", "secret")
+        player = store.create(uid, "alice", 1, 1)
+        legacy = json.loads(json.dumps(player))
+        legacy["extra"].pop("chat")
+        store.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(legacy), player["id"]))
+        store.db.execute("CREATE TRIGGER reject_normalize BEFORE UPDATE ON players BEGIN SELECT RAISE(ABORT, 'test failure'); END")
+        store.db.commit()
+        with pytest.raises(sqlite3.IntegrityError, match="test failure"):
+            if reader_name == "get_owned":
+                store.get_owned(uid, player["id"])
+            else:
+                store.create(uid, "alice", 1, 1)
+        assert not store.db.in_transaction
+        store.db.execute("DROP TRIGGER reject_normalize")
+        assert store.get_owned(uid, player["id"])["extra"]["chat"] == {
+            "worldList": [], "guildList": [], "allServerList": []
+        }
+    finally:
+        store.close()
+
+
+def test_existing_recruits_reconcile_absent_completion_markers_without_renewing_progress(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _ = store.login_account("alice", "secret")
+        player = store.create(uid, "alice", 1, 1)
+        player["team"]["roles"]["2"] = _starter_role(100201)
+        player["team"]["roles"]["3"] = _starter_role(100301)
+        player["point"] = {"nextCoinFreeTime": 123, "nextGemFreeTime": 456, "other": 9}
+        store.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(player), player["id"]))
+        store.db.commit()
+        coin = store.award_recruit(uid, player["id"], "coin")
+        gem = store.award_recruit(uid, player["id"], "gem")
+        assert coin["point"] == {"freeCoinTimes": 1, "nextCoinFreeTime": 123}
+        assert gem["point"] == {"isPayGemFirst": True, "nextGemFreeTime": 456}
+        assert store.get_owned(uid, player["id"])["point"] == {
+            "freeCoinTimes": 1, "isPayGemFirst": True,
+            "nextCoinFreeTime": 123, "nextGemFreeTime": 456, "other": 9,
+        }
+    finally:
+        store.close()
+
+
+def test_recruit_uses_unbounded_free_numeric_slot_without_overwriting_roles(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _ = store.login_account("alice", "secret")
+        player = store.create(uid, "alice", 1, 1)
+        sentinel = {"kindId": 999999}
+        player["team"]["roles"] = {str(index): copy.deepcopy(sentinel) for index in range(1, 100)}
+        store.db.execute("UPDATE players SET payload=? WHERE id=?", (json.dumps(player), player["id"]))
+        store.db.commit()
+        result = store.award_recruit(uid, player["id"], "coin")
+        assert result["team"]["roles"]["100"]["kindId"] == 100201
+        persisted = store.get_owned(uid, player["id"])["team"]["roles"]
+        assert all(persisted[str(index)] == sentinel for index in range(1, 100))
+        assert persisted["100"]["kindId"] == 100201
+    finally:
+        store.close()

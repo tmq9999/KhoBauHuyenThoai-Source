@@ -160,11 +160,13 @@ class PlayerStore:
 
     def create(self, uid: str, name: str, server_id: int, old_server_id: int) -> dict[str, Any]:
         with self.lock:
-            row = self.db.execute("SELECT id, payload FROM players WHERE uid=? AND server_id=?", (uid, server_id)).fetchone()
-            if row is not None:
-                return self._normalize_existing(int(row[0]), row[1])
             try:
-                self.db.execute("BEGIN")
+                self.db.execute("BEGIN IMMEDIATE")
+                row = self.db.execute("SELECT id, payload FROM players WHERE uid=? AND server_id=?", (uid, server_id)).fetchone()
+                if row is not None:
+                    player = self._normalize_existing(int(row[0]), row[1])
+                    self.db.commit()
+                    return player
                 cur = self.db.execute("INSERT INTO players(uid,server_id,payload) VALUES(?,?,?)", (uid, server_id, "{}"))
                 candidate = self._candidate(uid, name, int(cur.lastrowid), server_id, old_server_id)
                 serialized = json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
@@ -183,6 +185,20 @@ class PlayerStore:
             if not isinstance(player.get(key), dict):
                 player[key] = copy.deepcopy(smap_fixture)
                 changed = True
+                continue
+            type_map = player[key]
+            if not isinstance(type_map.get("1"), dict):
+                type_map["1"] = {}
+                changed = True
+            battle_map = type_map["1"]
+            if not isinstance(battle_map.get("101"), dict):
+                battle_map["101"] = {}
+                changed = True
+            stage_map = battle_map["101"]
+            for stage in ("10101", "10106"):
+                if stage not in stage_map:
+                    stage_map[stage] = 0
+                    changed = True
         shop = player.get("shop")
         if isinstance(shop, dict) and "hideRoleClassIds" not in shop:
             shop["hideRoleClassIds"] = [63]
@@ -220,13 +236,7 @@ class PlayerStore:
         if not changed:
             return player
         serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
-        try:
-            self.db.execute("BEGIN")
-            self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, player_id))
-            self.db.commit()
-        except Exception:
-            self.db.rollback()
-            raise
+        self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, player_id))
         return player
 
     def award_recruit(self, uid: str, player_id: int, route: str) -> dict[str, Any] | None:
@@ -265,7 +275,8 @@ class PlayerStore:
                     ):
                         self.db.rollback()
                         return None
-                    chosen_key = role_key if role_key not in roles else next((str(i) for i in range(1, 100) if str(i) not in roles), role_key)
+                    numeric_keys = [int(key) for key in roles if isinstance(key, str) and key.isdecimal()]
+                    chosen_key = role_key if role_key not in roles else str(max(numeric_keys, default=0) + 1)
                     roles[chosen_key] = copy.deepcopy(_FIRST_RECRUIT_ROLES[role_kind])
                     point = player.setdefault("point", {})
                     if route == "coin":
@@ -279,7 +290,23 @@ class PlayerStore:
                     self.db.commit()
                     existing_key = chosen_key
                 else:
-                    self.db.rollback()
+                    point = player.get("point")
+                    if not isinstance(point, dict):
+                        point = {}
+                        player["point"] = point
+                    marker_changed = False
+                    defaults = ({"freeCoinTimes": 1, "nextCoinFreeTime": 0} if route == "coin"
+                                else {"isPayGemFirst": True, "nextGemFreeTime": 0})
+                    for key, value in defaults.items():
+                        if key not in point:
+                            point[key] = value
+                            marker_changed = True
+                    if marker_changed:
+                        serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
+                        self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, int(row[0])))
+                        self.db.commit()
+                    else:
+                        self.db.rollback()
                 point = player.get("point", {})
                 response: dict[str, Any] = {
                     "code": 200,
@@ -301,8 +328,18 @@ class PlayerStore:
 
     def get_owned(self, uid: str, player_id: int, server_id: int = 1) -> dict[str, Any] | None:
         with self.lock:
-            row = self.db.execute("SELECT id, payload FROM players WHERE id=? AND uid=? AND server_id=?", (player_id, uid, server_id)).fetchone()
-            return None if row is None else self._normalize_existing(int(row[0]), row[1])
+            try:
+                self.db.execute("BEGIN IMMEDIATE")
+                row = self.db.execute("SELECT id, payload FROM players WHERE id=? AND uid=? AND server_id=?", (player_id, uid, server_id)).fetchone()
+                if row is None:
+                    self.db.rollback()
+                    return None
+                player = self._normalize_existing(int(row[0]), row[1])
+                self.db.commit()
+                return player
+            except Exception:
+                self.db.rollback()
+                raise
 
     def rename(self, uid: str, player_id: int, name: str, server_id: int = 1) -> dict[str, str] | None:
         """Apply first-name selection only; paid renames remain unsupported."""
