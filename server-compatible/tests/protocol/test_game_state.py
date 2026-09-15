@@ -130,7 +130,18 @@ def _pinned_table(name: str):
 
 def _starter_role(kind_id: int):
     values = json.loads(STARTER_VALUES.read_text(encoding="utf-8"))
-    return values["completeLevel1RoleFixture"][str(kind_id)]
+    role = values["completeLevel1RoleFixture"][str(kind_id)]
+    # Keep the original zero-power evidence immutable; expected response now
+    # includes the fields read by roleScene and eqptScene.
+    role["power"] = 980.2 if kind_id == 100201 else 978.2
+    role["attr"].update({"hpGrowth": 233, "atkGrowth": 9, "defGrowth": 21, "mdefGrowth": 21}
+                        if kind_id == 100201 else {"hpGrowth": 159, "atkGrowth": 19, "defGrowth": 19, "mdefGrowth": 19})
+    for slot, item in role["equipments"].items():
+        attrs = {"hp": 0, "atk": 0, "def": 0, "mdef": 0, "hit": 0, "dodge": 0, "crit": 0}
+        attrs.update({"hp": 551, "def": 51} if slot == "evlItem_1" else
+                     {"mdef": 51, "dodge": 28} if slot == "evlItem_2" else {"atk": 20, "crit": 10})
+        item["attrs"] = attrs
+    return role
 
 
 def test_create_is_idempotent_persists_and_encodes_home_candidate(tmp_path):
@@ -144,20 +155,9 @@ def test_create_is_idempotent_persists_and_encodes_home_candidate(tmp_path):
         assert created["userName"] == created["name"] == "alice"
         assert (created["gem"], created["coin"], created["level"]) == (50, 0, 1)
         role = created["team"]["roles"]["1"]
-        assert role == {
-            "kindId": 100101, "level": 1, "star": 1, "awakeLevel": 0,
-            "experience": 0, "nextLevelExp": 25, "power": 0, "mp": 0,
-            "attr": {"hp": 1752, "atk": 127, "def": 156, "mdef": 156, "hit": 100, "dodge": 28, "crit": 40},
-            "initAttr": {"hp": 1201, "atk": 47, "def": 105, "mdef": 105, "hit": 100, "dodge": 0, "crit": 0},
-            "equipmentsAttr": {"hp": 551, "atk": 80, "def": 51, "mdef": 51, "hit": 0, "dodge": 28, "crit": 40},
-            "equipments": {
-                "evlItem_1": {"kindId": 30101, "level": 1}, "evlItem_2": {"kindId": 30201, "level": 1},
-                "evlItem_3": {"kindId": 30301, "level": 1}, "evlItem_4": {"kindId": 30401, "level": 1},
-                "evlItem_5": {"kindId": 30501, "level": 1}, "evlItem_6": {"kindId": 30601, "level": 1},
-            },
-            "skills": {"100101": {"kindId": 100101, "level": 1}},
-            "awakeSkills": {}, "awakeRateIncreaseTimes": 0,
-        }
+        expected_role = _starter_role(100201)
+        expected_role.update(kindId=100101, skills={"100101": {"kindId": 100101, "level": 1}})
+        assert role == expected_role
         goods = created["shop"]["goodsMap"]["1"]
         assert set(goods) == {"10001", "10002"}
         assert all(set(goods[str(index)]) == {"entityId", "moneyId", "price", "count", "isSaleOut", "requireVip", "shopType"}

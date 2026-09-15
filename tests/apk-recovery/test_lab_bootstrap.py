@@ -3,6 +3,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 import io
@@ -61,6 +62,7 @@ def test_local_auth_transform_patches_exact_sdk_init_and_preserves_other_text():
     expected = remapped.replace(helper.SDK_INIT_ANDROID_CALL, helper.SDK_INIT_ANDROID_LOCAL_CALL, 1)
     for original_log, replacement in helper.LOCAL_AUTH_LOG_CALLS:
         expected = expected.replace(original_log, replacement, 1)
+    expected = expected.replace(helper.RPC_CALLBACK_CATCH, helper.RPC_CALLBACK_DIAGNOSTIC, 1)
     assert transformed == expected
 
 
@@ -229,3 +231,72 @@ def test_manifest_rewrite_refuses_missing_encoded_payload(tmp_path):
 
     with pytest.raises(ValueError, match="missing encoded payload"):
         helper.rewrite_manifest(manifest_path, encoded, tmp_path / "lab.manifest")
+
+
+def test_local_auth_diagnostic_transform_is_exact_pinned_and_node_syntax_valid(tmp_path):
+    helper = _helper_module()
+    original = PROJECT_SOURCE.read_text(encoding="utf-8")
+    remapped = helper.remap_build_ext_text(original)
+    transformed = helper.apply_local_auth_transform(remapped)
+    assert transformed.count("LAB_RPC_CALLBACK_ERROR") == 1
+    assert "e.message" not in helper.RPC_CALLBACK_DIAGNOSTIC
+    assert "JSON.stringify(e)" not in helper.RPC_CALLBACK_DIAGNOSTIC
+    assert r"project\.js:\d+:\d+" in helper.RPC_CALLBACK_DIAGNOSTIC
+    assert "String(e && e.name)" not in helper.RPC_CALLBACK_DIAGNOSTIC
+    assert "labNames" in helper.RPC_CALLBACK_DIAGNOSTIC
+    output = tmp_path / "project.js"
+    output.write_text(transformed, encoding="utf-8")
+    checked = subprocess.run(["node", "--check", str(output)], capture_output=True, text=True)
+    assert checked.returncode == 0, checked.stderr
+
+
+def test_local_auth_diagnostic_transform_fails_closed_on_missing_or_duplicate_catch_pin():
+    helper = _helper_module()
+    original = PROJECT_SOURCE.read_text(encoding="utf-8")
+    remapped = helper.remap_build_ext_text(original)
+    assert remapped.count(helper.RPC_CALLBACK_CATCH) == 1
+    with pytest.raises(ValueError, match="callback catch pin"):
+        helper.apply_local_auth_transform(remapped.replace(helper.RPC_CALLBACK_CATCH, "", 1))
+    with pytest.raises(ValueError, match="callback catch pin"):
+        helper.apply_local_auth_transform(remapped + helper.RPC_CALLBACK_CATCH)
+
+
+def test_local_auth_diagnostic_object_name_is_coerced_to_fixed_error_label(tmp_path):
+    helper = _helper_module()
+    block = helper.RPC_CALLBACK_DIAGNOSTIC
+    body = block[len("} catch (e) {"): -len("\n}")]
+    script = """
+var logs = [];
+console.log = function () { logs.push(Array.prototype.slice.call(arguments)); };
+var cc = {sys: {isNative: true}};
+var e = {name: {toString: function () { return 'TypeError'; }}, stack: 'Error at project.js:12:34'};
+try { throw e; } catch (e) { BODY }
+process.stdout.write(JSON.stringify(logs));
+""".replace("BODY", body)
+    output = tmp_path / "diagnostic.js"
+    output.write_text(script, encoding="utf-8")
+    checked = subprocess.run(["node", str(output)], capture_output=True, text=True)
+    assert checked.returncode == 0, checked.stderr
+    logs = json.loads(checked.stdout)
+    assert logs == [["LAB_RPC_CALLBACK_ERROR", "Error", "project.js:12:34"]]
+
+
+def test_local_auth_diagnostic_survives_throwing_error_property_getters(tmp_path):
+    helper = _helper_module()
+    block = helper.RPC_CALLBACK_DIAGNOSTIC
+    body = block[len("} catch (e) {"): -len("\n}")]
+    script = """
+var logs = [];
+console.log = function () { logs.push(Array.prototype.slice.call(arguments)); };
+var cc = {sys: {isNative: true}};
+var e = {};
+Object.defineProperty(e, 'name', {get: function () { throw new Error('do not leak name'); }});
+Object.defineProperty(e, 'stack', {get: function () { throw new Error('do not leak stack'); }});
+try { throw e; } catch (e) { BODY }
+process.stdout.write(JSON.stringify(logs));
+""".replace("BODY", body)
+    output = tmp_path / "diagnostic-hostile-getter.js"
+    output.write_text(script, encoding="utf-8")
+    checked = subprocess.run(["node", str(output)], capture_output=True, text=True)
+    assert checked.returncode == 0, checked.stderr
+    assert json.loads(checked.stdout) == [["LAB_RPC_CALLBACK_ERROR", "Error", ""]]

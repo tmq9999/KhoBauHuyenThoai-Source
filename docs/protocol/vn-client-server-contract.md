@@ -51,3 +51,32 @@ Route response schemas, user/token values, connector addresses, heartbeat
 number, dictionary, protobuf tables, and encoded player payloads are UNKNOWN.
 The local probe advertises heartbeat `0` (disabled policy), never fabricates a
 positive interval, and never fabricates success or player data.
+
+## Local game-entry compatibility slice
+
+The loopback `game_server.py` implements a bounded lab slice used by the
+recovered client. These routes are statically observed in `project.js`; the
+state changes below are local compatibility policy, not a claim about the
+historical provider backend.
+
+| Route | Request | Local state change |
+| --- | --- | --- |
+| `logic.pointHandler.coin` / `gem` | `{}` | deterministic tutorial recruit, idempotent |
+| `logic.smapHandler.beginSmap` | `smapId`, `teamIndexs` | debits AP and opens a pending battle |
+| `logic.smapHandler.endSmap` | `star`, `teamIndexs` | settles attempt, AP/coin/EXP/role-EXP and material drop |
+| `logic.playerHandler.signIn` | `{}` | one sign-in per Vietnam calendar day, APK `signInData` rows |
+| `logic.playerHandler.useItem` | `bagIndex`, `itemCount` | consumes AP/box item and returns bag delta/rewards |
+| `logic.bagHandler.sell` | `bagIndexs`, `itemCounts` | consumes sellable stacks and credits coin |
+| `logic.teamHandler.useExpItem` | `teamIndex`, `bagIndex`, `itemCount` | consumes role-EXP item and updates teammate stats |
+| `logic.teamHandler.evolveEquipment` | `teamIndex`, `equipmentType` | consumes first green-tier materials and updates equipment |
+| `logic.teamHandler.evolveRole` | `teamIndex` | requires six green-tier equipment items, returns `preRole` |
+
+All local mutations are SQLite transactions scoped to the authenticated,
+selected player. Unmapped activity, shop, task, multiplayer and later-tier
+routes remain `500` until their APK consumer fields and reward rules are
+recovered. Repack/sign success and this compatibility slice do not prove
+historical server compatibility or full-game parity.
+
+See [feature slice evidence and limits](../release/2026-09-15-server-feature-slice.md)
+for source-line references, local policy choices, missing material sources,
+and the distinction between loopback tests and native-client verification.

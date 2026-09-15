@@ -33,6 +33,8 @@ PINNED_PROJECT_SHA256 = "9776b6e20978d5d911bc0abb85830820bac5a3bfb8db4e65a617c5d
 SDK_INIT_ANDROID_CALL = 'cc.sys.os == cc.sys.OS_ANDROID ? jsb.reflection.callStaticMethod("org/cocos2dx/javascript/SDKAdapter", "initPackageInfo", "()V") : cc.sys.os == cc.sys.OS_IOS && jsb.reflection.callStaticMethod("SDKAdapter", "initPackageInfo");'
 SDK_INIT_ANDROID_LOCAL_CALL = 'if (cc.sys.os == cc.sys.OS_ANDROID) {\nd.sdkName = "mmx";\nd.channel = "Android";\n} else if (cc.sys.os == cc.sys.OS_IOS) {\njsb.reflection.callStaticMethod("SDKAdapter", "initPackageInfo");\n}'
 LOCAL_AUTH_LOG_CALLS = (("console.log(t);", ""), ("console.log(e + \" \" + JSON.stringify(t));", ""))
+RPC_CALLBACK_CATCH = "} catch (e) {\nif (!cc.sys.isNative) throw e;\n}"
+RPC_CALLBACK_DIAGNOSTIC = "} catch (e) {\nif (cc.sys.isNative) {\nvar labNames = {Error: 1, TypeError: 1, ReferenceError: 1, SyntaxError: 1, RangeError: 1, EvalError: 1, URIError: 1};\nvar labName = \"Error\", labStack = \"\";\ntry {\nvar labRawName = e && e.name;\nvar labRawStack = e && e.stack;\nlabName = typeof labRawName === \"string\" && Object.prototype.hasOwnProperty.call(labNames, labRawName) ? labRawName : \"Error\";\nlabStack = typeof labRawStack == \"string\" ? (labRawStack.match(/project\\.js:\\d+:\\d+/g) || []).slice(0, 8).join(\"|\") : \"\";\n} catch (labDiagnosticError) {}\nconsole.log(\"LAB_RPC_CALLBACK_ERROR\", labName, labStack);\n} else throw e;\n}"
 
 
 def remap_build_ext_text(source: str) -> str:
@@ -53,6 +55,10 @@ def apply_local_auth_transform(source: str) -> str:
         if count != 1:
             raise ValueError(f"expected exactly one HTTP log pin, found {count}")
         transformed = transformed.replace(original, replacement, 1)
+    count = transformed.count(RPC_CALLBACK_CATCH)
+    if count != 1:
+        raise ValueError(f"expected exactly one callback catch pin, found {count}")
+    transformed = transformed.replace(RPC_CALLBACK_CATCH, RPC_CALLBACK_DIAGNOSTIC, 1)
     return transformed
 
 

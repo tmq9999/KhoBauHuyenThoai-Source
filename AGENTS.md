@@ -8,3 +8,5 @@
 - Repack/sign success does not prove APK boot, visual parity or server compatibility. Report these milestones separately with real evidence.
 - Use disposable, network-isolated lab devices for APK runtime. A connected ADB device is not permission to install, overwrite, or launch on it. Do not contact historical provider/payment endpoints or log tokens/keys.
 - Keep progress concrete: source files, decoder output, APK artifacts, tests and client traces. Do not spend another turn generating replacement plans or reviewing retired web code.
+- For online-server work, read `docs/superpowers/specs/2026-09-16-online-game-server-design.md`, `docs/protocol/vn-online-route-matrix.md`, `docs/superpowers/plans/2026-09-16-online-game-server.md` and `docs/superpowers/runbooks/2026-09-16-codex-online-game-server.md` before editing server/admin code. Execute the Codex runbook, not the historical Antigravity runbook.
+- Every deliverable commit must include an accurate `README.md` and `CHANGELOG.md` update. A unit-test pass is not native-client or online-service acceptance.

@@ -230,6 +230,24 @@ class GameServer:
             player_id = owner.get("playerId")
             result = self.store.rename(owner["uid"], int(player_id) if player_id is not None else 0, name)
             return (result if result is not None else self._error()), owner
+        if route == "logic.playerHandler.signIn":
+            if body:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.sign_in(owner["uid"], int(player_id) if player_id is not None else 0)
+            return (result if result is not None else self._error()), owner
+        if route == "logic.playerHandler.useItem":
+            if set(body) != {"bagIndex", "itemCount"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.use_item(owner["uid"], int(player_id) if player_id is not None else 0, body.get("bagIndex"), body.get("itemCount"))
+            return (result if result is not None else self._error()), owner
+        if route == "logic.bagHandler.sell":
+            if set(body) != {"bagIndexs", "itemCounts"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.sell_items(owner["uid"], int(player_id) if player_id is not None else 0, body.get("bagIndexs"), body.get("itemCounts"))
+            return (result if result is not None else self._error()), owner
         if route in ("logic.pointHandler.coin", "logic.pointHandler.gem"):
             if body:
                 return self._error(), owner
@@ -253,6 +271,24 @@ class GameServer:
                 owner["uid"], int(player_id) if player_id is not None else 0,
                 body.get("star"), body.get("teamIndexs"),
             )
+            return (result if result is not None else self._error()), owner
+        if route == "logic.teamHandler.evolveRole":
+            if set(body) != {"teamIndex"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.evolve_role(owner["uid"], int(player_id) if player_id is not None else 0, body.get("teamIndex"))
+            return (result if result is not None else self._error()), owner
+        if route == "logic.teamHandler.useExpItem":
+            if set(body) != {"teamIndex", "bagIndex", "itemCount"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.use_exp_item(owner["uid"], int(player_id) if player_id is not None else 0, body.get("teamIndex"), body.get("bagIndex"), body.get("itemCount"))
+            return (result if result is not None else self._error()), owner
+        if route == "logic.teamHandler.evolveEquipment":
+            if set(body) != {"teamIndex", "equipmentType"}:
+                return self._error(), owner
+            player_id = owner.get("playerId")
+            result = self.store.evolve_equipment(owner["uid"], int(player_id) if player_id is not None else 0, body.get("teamIndex"), body.get("equipmentType"))
             return (result if result is not None else self._error()), owner
         return self._error(), owner
 

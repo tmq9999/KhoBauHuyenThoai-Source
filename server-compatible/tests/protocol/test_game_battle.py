@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import copy
 import gzip
 import http.client
 import json
@@ -34,6 +35,13 @@ def _battle_player(store, name="alice", password="secret"):
     assert store.award_recruit(uid, player["id"], "coin") is not None
     assert store.award_recruit(uid, player["id"], "gem") is not None
     return uid, token, store.get_owned(uid, player["id"])
+
+
+def _win_stage(store, uid, player_id, smap_id, star=3):
+    assert store.begin_smap(uid, player_id, smap_id, ["1", "2", "3"])["code"] == 200
+    result = store.end_smap(uid, player_id, star, ["1", "2", "3"])
+    assert result is not None and result["code"] == 200
+    return result
 
 
 def test_begin_smap_debits_ap_once_and_pending_survives_store_reopen(tmp_path):
@@ -74,7 +82,7 @@ def test_first_win_awards_literal_values_complete_roles_and_preserves_map_subtre
 
         assert result["code"] == 200
         assert (result["coin"], result["experience"], result["actionPoint"]) == (1200, 6, 54)
-        assert result["_temp"] == {"entityCountMap": {}}
+        assert result["_temp"] == {"entityCountMap": {"42102": 1, "42202": 1}}
         assert result["smapStarMap"] == {
             "1": {"101": {"10101": 3, "10106": 0, "sibling": 3}, "102": {"kept": 2}}
         }
@@ -87,7 +95,8 @@ def test_first_win_awards_literal_values_complete_roles_and_preserves_map_subtre
             assert role["level"] == 1
             assert role["experience"] == 20
             assert role["nextLevelExp"] == 25
-            assert set(role["attr"]) == {"hp", "atk", "def", "mdef", "hit", "dodge", "crit"}
+            assert set(role["attr"]) == {"hp", "atk", "def", "mdef", "hit", "dodge", "crit",
+                                         "hpGrowth", "atkGrowth", "defGrowth", "mdefGrowth"}
             assert len(role["equipments"]) == 6
 
         persisted = store.get_owned(uid, player["id"])
@@ -97,6 +106,111 @@ def test_first_win_awards_literal_values_complete_roles_and_preserves_map_subtre
         assert store.end_smap(uid, player["id"], 3, ["1", "2", "3"]) is None
         assert store.begin_smap(uid, player["id"], 10101, ["1", "2", "3"]) is None
         assert store.get_owned(uid, player["id"])["coin"] == 1200
+    finally:
+        store.close()
+
+
+def test_10102_unlocks_only_after_persisted_10101_win_and_levels_complete_roles(tmp_path):
+    state = tmp_path / "players.sqlite3"
+    store = PlayerStore(state)
+    uid, _, player = _battle_player(store)
+    assert store.begin_smap(uid, player["id"], 10102, ["1", "2", "3"]) is None
+    _win_stage(store, uid, player["id"], 10101)
+    store.close()
+
+    reopened = PlayerStore(state)
+    try:
+        assert reopened.begin_smap(uid, player["id"], 10103, ["1", "2", "3"]) is None
+        result = _win_stage(reopened, uid, player["id"], 10102, 2)
+        assert (result["coin"], result["experience"], result["actionPoint"]) == (2400, 12, 48)
+        assert result["smapStarMap"]["1"]["101"]["10102"] == 2
+        assert result["smapTimesMap"]["1"]["101"]["10102"] == 1
+        for key in ("1", "2"):
+            role = result["team"]["roles"][key]
+            assert (role["level"], role["experience"], role["nextLevelExp"]) == (2, 15, 30)
+            assert role["initAttr"] == {"hp": 1434, "atk": 56, "def": 126, "mdef": 126, "hit": 100, "dodge": 0, "crit": 0}
+            assert role["attr"] == {"hp": 1985, "atk": 136, "def": 177, "mdef": 177, "hit": 100, "dodge": 28, "crit": 40,
+                                    "hpGrowth": 233, "atkGrowth": 9, "defGrowth": 21, "mdefGrowth": 21}
+        nami = result["team"]["roles"]["3"]
+        assert nami["initAttr"] == {"hp": 980, "atk": 120, "def": 115, "mdef": 115, "hit": 100, "dodge": 0, "crit": 0}
+        assert nami["attr"] == {"hp": 1531, "atk": 200, "def": 166, "mdef": 166, "hit": 100, "dodge": 28, "crit": 40,
+                                "hpGrowth": 159, "atkGrowth": 19, "defGrowth": 19, "mdefGrowth": 19}
+        assert reopened.begin_smap(uid, player["id"], 10104, ["1", "2", "3"]) is None
+    finally:
+        reopened.close()
+
+
+def test_six_distinct_wins_apply_ap_restore_player_and_role_level_arithmetic(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _, player = _battle_player(store)
+        original_equipment = copy.deepcopy(player["team"]["roles"]["1"]["equipments"])
+        original_skills = copy.deepcopy(player["team"]["roles"]["1"]["skills"])
+        result = None
+        stage_five = None
+        for smap_id in range(10101, 10107):
+            result = _win_stage(store, uid, player["id"], smap_id)
+            if smap_id == 10105:
+                stage_five = result
+        assert result is not None
+        assert stage_five is not None
+        assert (stage_five["level"], stage_five["experience"], stage_five["nextLevelExp"], stage_five["actionPoint"]) == (2, 5, 25, 50)
+        assert stage_five["timesMaxMap"] == {"actionPoint": 62, "skillPoint": 10}
+        assert (result["coin"], result["experience"], result["actionPoint"]) == (7200, 11, 44)
+        assert result["smapStarMap"] == {"1": {"101": {
+            "10101": 3, "10102": 3, "10103": 3, "10104": 3, "10105": 3, "10106": 3,
+        }}}
+        persisted = store.get_owned(uid, player["id"])
+        assert (persisted["level"], persisted["experience"], persisted["nextLevelExp"]) == (2, 11, 25)
+        assert persisted["timesMaxMap"] == {"actionPoint": 62, "skillPoint": 10}
+        assert persisted["smapTimesMap"]["1"]["101"] == {
+            "10101": 1, "10102": 1, "10103": 1, "10104": 1, "10105": 1, "10106": 1,
+        }
+        luffy = persisted["team"]["roles"]["1"]
+        assert (luffy["level"], luffy["experience"], luffy["nextLevelExp"]) == (4, 25, 60)
+        assert luffy["initAttr"] == {"hp": 1900, "atk": 74, "def": 168, "mdef": 168, "hit": 100, "dodge": 0, "crit": 0}
+        assert luffy["attr"] == {"hp": 2451, "atk": 154, "def": 219, "mdef": 219, "hit": 100, "dodge": 28, "crit": 40,
+                                 "hpGrowth": 233, "atkGrowth": 9, "defGrowth": 21, "mdefGrowth": 21}
+        nami = persisted["team"]["roles"]["3"]
+        assert nami["initAttr"] == {"hp": 1298, "atk": 158, "def": 153, "mdef": 153, "hit": 100, "dodge": 0, "crit": 0}
+        assert nami["attr"] == {"hp": 1849, "atk": 238, "def": 204, "mdef": 204, "hit": 100, "dodge": 28, "crit": 40,
+                                "hpGrowth": 159, "atkGrowth": 19, "defGrowth": 19, "mdefGrowth": 19}
+        assert luffy["equipments"] == original_equipment
+        assert luffy["skills"] == original_skills
+    finally:
+        store.close()
+
+
+def test_repeatable_rows_can_replay_but_nonrepeatable_rows_and_stage_beyond_10106_reject(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _, player = _battle_player(store)
+        _win_stage(store, uid, player["id"], 10101)
+        _win_stage(store, uid, player["id"], 10102, 3)
+        assert store.begin_smap(uid, player["id"], 10101, ["1", "2", "3"]) is None
+        replay = _win_stage(store, uid, player["id"], 10102, 1)
+        assert replay["smapStarMap"]["1"]["101"]["10102"] == 3
+        assert replay["smapTimesMap"]["1"]["101"]["10102"] == 2
+        assert store.begin_smap(uid, player["id"], 10107, ["1", "2", "3"]) is None
+        _win_stage(store, uid, player["id"], 10103)
+        assert store.begin_smap(uid, player["id"], 10103, ["1", "2", "3"]) is None
+    finally:
+        store.close()
+
+
+def test_repeatable_loss_consumes_attempt_without_reward_and_remains_available(tmp_path):
+    store = PlayerStore(tmp_path / "players.sqlite3")
+    try:
+        uid, _, player = _battle_player(store)
+        _win_stage(store, uid, player["id"], 10101)
+        before = store.get_owned(uid, player["id"])
+        assert store.begin_smap(uid, player["id"], 10102, ["1", "2", "3"])["actionPoint"] == 48
+        loss = store.end_smap(uid, player["id"], 0, ["1", "2", "3"])
+        assert loss["smapTimesMap"]["1"]["101"]["10102"] == 1
+        after = store.get_owned(uid, player["id"])
+        assert (after["coin"], after["experience"]) == (before["coin"], before["experience"])
+        assert after["smapStarMap"]["1"]["101"].get("10102", 0) == 0
+        assert store.begin_smap(uid, player["id"], 10102, ["1", "2", "3"])["actionPoint"] == 42
     finally:
         store.close()
 
@@ -181,7 +295,7 @@ def test_begin_rejects_unsupported_or_invalid_selection_without_mutation(tmp_pat
 
 
 def test_begin_rejects_attempt_cap_low_ap_completed_and_unsupported_role_state(tmp_path):
-    for field, value in (("attempts", 10), ("ap", 5), ("completed", 1), ("role_xp", 5)):
+    for field, value in (("attempts", 10), ("ap", 5), ("completed", 1), ("role_xp", 26)):
         store = PlayerStore(tmp_path / f"{field}.sqlite3")
         try:
             uid, _, player = _battle_player(store)
@@ -341,9 +455,18 @@ async def _battle_socket_flow(tmp_path):
             reader, writer, 6, "logic.smapHandler.endSmap", {"star": 3, "teamIndexs": ["1", "2", "3"]}
         )
         assert (end["code"], end["coin"], end["experience"], end["actionPoint"]) == (200, 1200, 6, 54)
-        assert end["_temp"] == {"entityCountMap": {}}
+        assert end["_temp"] == {"entityCountMap": {"42102": 1, "42202": 1}}
+        begin_two = await _request(
+            reader, writer, 7, "logic.smapHandler.beginSmap", {"smapId": 10102, "teamIndexs": ["1", "2", "3"]}
+        )
+        assert begin_two == {"code": 200, "actionPoint": 48, "_temp": {"showEntityIdsMap": {}}}
+        end_two = await _request(
+            reader, writer, 8, "logic.smapHandler.endSmap", {"star": 2, "teamIndexs": ["1", "2", "3"]}
+        )
+        assert (end_two["code"], end_two["coin"], end_two["experience"], end_two["actionPoint"]) == (200, 2400, 12, 48)
         stored = server.store.get_owned(account["uid"], player["id"])
         assert stored["smapStarMap"]["1"]["101"]["10101"] == 3
+        assert stored["smapStarMap"]["1"]["101"]["10102"] == 2
     finally:
         if writer is not None:
             writer.close()

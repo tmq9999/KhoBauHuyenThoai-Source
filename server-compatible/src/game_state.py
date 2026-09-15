@@ -9,12 +9,20 @@ import gzip
 import hashlib
 import hmac
 import json
+import math
 import secrets
 import sqlite3
 import threading
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
+
+from game_content import table
+from game_rules import (
+    ATTR_KEYS, FIRST_MAP_RULES, ROLE_LEVEL_EXPERIENCE, STAR_GROWTH, SUPPORTED_ROLE_IDS,
+    advance_player, advance_role, equipment_attrs, player_supported, role_growth,
+    role_max_level, role_power, role_supported,
+)
 
 
 _FIRST_RECRUIT_ROLES: dict[str, dict[str, Any]] = {
@@ -38,12 +46,6 @@ _FIRST_RECRUIT_ROLES: dict[str, dict[str, Any]] = {
     },
 }
 
-_FIRST_SMAP_ID = 10101
-_FIRST_SMAP_AP = 6
-_FIRST_SMAP_ATTEMPTS = 10
-_FIRST_SMAP_COIN = 1200
-_FIRST_SMAP_PLAYER_XP = 6
-_FIRST_SMAP_ROLE_XP = 20
 # Local compatibility policy: enough for a lab playthrough, finite so an
 # abandoned client-local simulation cannot block the player permanently.
 _SMAP_PENDING_TTL_SECONDS = 30 * 60
@@ -132,6 +134,139 @@ class PlayerStore:
         with self.lock:
             return self.db.execute("SELECT 1 FROM accounts WHERE uid=?", (uid,)).fetchone() is not None
 
+    @staticmethod
+    def _recompute_power(player: dict[str, Any]) -> bool:
+        roles = player.get("team", {}).get("roles")
+        if not isinstance(roles, dict):
+            return False
+        changed = False
+        total = 0
+        for role in roles.values():
+            if not role_supported(role):
+                if isinstance(role, dict) and type(role.get("power")) in (int, float) and math.isfinite(role["power"]):
+                    total += role["power"]
+                continue
+            _, growth = role_growth(role["kindId"], role["star"])
+            for key, value in growth.items():
+                field = f"{key}Growth"
+                if role["attr"].get(field) != value:
+                    role["attr"][field] = value
+                    changed = True
+            for item in role["equipments"].values():
+                if (isinstance(item, dict) and type(item.get("kindId")) is int
+                        and item["kindId"] in table("evolutionItemData")
+                        and type(item.get("level")) is int and item["level"] > 0):
+                    attrs = equipment_attrs(item)
+                    if item.get("attrs") != attrs:
+                        item["attrs"] = attrs
+                        changed = True
+            power = role_power(role)
+            total += power
+            if role.get("power") != power:
+                role["power"] = power
+                changed = True
+        if player.get("power") != round(total, 6):
+            player["power"] = round(total, 6)
+            changed = True
+        return changed
+
+    @staticmethod
+    def _next_bag_index(items: dict[str, Any]) -> str:
+        numeric = [int(key) for key in items if isinstance(key, str) and key.isdecimal()]
+        return str(max(numeric, default=0) + 1)
+
+    @staticmethod
+    def _add_drop(player: dict[str, Any], entity_id: int, count: int, extra: dict[str, Any] | None = None) -> None:
+        if count <= 0:
+            return
+        if entity_id == 101:
+            player["coin"] = int(player.get("coin", 0)) + count
+            return
+        if entity_id == 102:
+            player["gem"] = int(player.get("gem", 0)) + count
+            return
+        items = player.setdefault("bag", {}).setdefault("items", {})
+        for item in items.values():
+            if isinstance(item, dict) and item.get("kindId") == entity_id and (extra is None or item.get("extra") == extra):
+                item["count"] = int(item.get("count", 0)) + count
+                return
+        value: dict[str, Any] = {"kindId": entity_id, "count": count}
+        if extra:
+            value["extra"] = copy.deepcopy(extra)
+        items[PlayerStore._next_bag_index(items)] = value
+
+    @staticmethod
+    def _drop_map(player: dict[str, Any], drops: tuple[tuple[int, int], ...]) -> dict[str, int]:
+        result: dict[str, int] = {}
+        for entity_id, count in drops:
+            PlayerStore._add_drop(player, entity_id, count)
+            key = str(entity_id)
+            result[key] = result.get(key, 0) + count
+        return result
+
+    @staticmethod
+    def _entity_drop(desc: str) -> tuple[tuple[int, int], ...]:
+        drops: list[tuple[int, int]] = []
+        for part in desc.split(","):
+            item, count = part.split("x", 1)
+            drops.append((int(item.split("_")[0]), int(count.split("_")[0])))
+        return tuple(drops)
+
+    @staticmethod
+    def _build_role(kind_id: int, star: int = 1) -> dict[str, Any] | None:
+        row = table("roleData").get(kind_id)
+        if kind_id not in SUPPORTED_ROLE_IDS or row is None or type(star) is not int or star not in STAR_GROWTH:
+            return None
+        factor = STAR_GROWTH[star]
+        init = {
+            key: int(row[f"init{key.capitalize()}"]) + int(row[f"{key}Growth"] * factor)
+            for key in ("hp", "atk", "def", "mdef")
+        }
+        init.update({"hit": int(row["hit"]), "dodge": int(row["dodge"]), "crit": int(row["crit"])})
+        equipment: dict[str, Any] = {}
+        equipment_attr = {key: 0 for key in ("hp", "atk", "def", "mdef", "hit", "dodge", "crit")}
+        for index, item_id in enumerate(row["initEvlItemIds"], 1):
+            equipment[f"evlItem_{index}"] = {"kindId": item_id, "level": 1}
+            item_row = table("evolutionItemData").get(item_id)
+            for field, value in (item_row or {}).get("effect", {}).items():
+                if field.startswith("init"):
+                    equipment_attr[field[4:].lower()] += int(value)
+        attrs = {key: init[key] + equipment_attr[key] for key in init}
+        return {
+            "kindId": kind_id, "level": 1, "star": star, "awakeLevel": 0,
+            "experience": 0, "nextLevelExp": 25, "power": 0, "mp": 0,
+            "attr": attrs, "initAttr": init, "equipmentsAttr": equipment_attr,
+            "equipments": equipment, "skills": {str(kind_id): {"kindId": kind_id, "level": 1}},
+            "awakeSkills": {}, "awakeRateIncreaseTimes": 0,
+        }
+
+    @staticmethod
+    def _update_role_equipment_attrs(role: dict[str, Any]) -> None:
+        equipment_attr = {key: 0 for key in ("hp", "atk", "def", "mdef", "hit", "dodge", "crit")}
+        for item in role.get("equipments", {}).values():
+            if not isinstance(item, dict):
+                continue
+            if item.get("kindId") not in table("evolutionItemData"):
+                continue
+            item["attrs"] = equipment_attrs(item)
+            for key, value in item["attrs"].items():
+                equipment_attr[key] += value
+        for key in ATTR_KEYS:
+            role["attr"][key] += equipment_attr[key] - role["equipmentsAttr"][key]
+        role["equipmentsAttr"] = equipment_attr
+        role["power"] = role_power(role)
+
+    @staticmethod
+    def _bag_delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
+        delta: dict[str, Any] = {}
+        for key in before:
+            if key not in after:
+                delta[key] = None
+        for key, value in after.items():
+            if before.get(key) != value:
+                delta[key] = copy.deepcopy(value)
+        return delta
+
     def _candidate(self, uid: str, name: str, player_id: int, server_id: int, old_server_id: int) -> dict[str, Any]:
         now = _dt.datetime.now(_dt.timezone(_dt.timedelta(hours=7)))
         millis = int(now.timestamp() * 1000)
@@ -186,6 +321,7 @@ class PlayerStore:
                     return player
                 cur = self.db.execute("INSERT INTO players(uid,server_id,payload) VALUES(?,?,?)", (uid, server_id, "{}"))
                 candidate = self._candidate(uid, name, int(cur.lastrowid), server_id, old_server_id)
+                self._recompute_power(candidate)
                 serialized = json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
                 self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, cur.lastrowid))
                 self.db.commit()
@@ -254,6 +390,7 @@ class PlayerStore:
                     if key not in chat:
                         chat[key] = []
                         changed = True
+        changed = self._recompute_power(player) or changed
         if not changed:
             return player
         serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
@@ -262,7 +399,7 @@ class PlayerStore:
 
     def award_recruit(self, uid: str, player_id: int, route: str) -> dict[str, Any] | None:
         """Award one deterministic tutorial recruit, atomically and idempotently."""
-        if route not in ("coin", "gem") or not isinstance(player_id, int) or player_id <= 0:
+        if route not in ("coin", "gem") or type(player_id) is not int or player_id <= 0:
             return None
         role_kind, role_key = ("100201", "2") if route == "coin" else ("100301", "3")
         with self.lock:
@@ -280,7 +417,9 @@ class PlayerStore:
                 if not isinstance(roles, dict):
                     self.db.rollback()
                     return None
-                existing_key = next((key for key, role in roles.items() if isinstance(role, dict) and str(role.get("kindId")) == role_kind), None)
+                existing_key = next((key for key, role in roles.items() if isinstance(role, dict)
+                                     and type(role.get("kindId")) is int
+                                     and role["kindId"] // 100 == int(role_kind) // 100), None)
                 if existing_key is None:
                     point_state = player.get("point") if isinstance(player.get("point"), dict) else {}
                     now_ms = int(_dt.datetime.now(_dt.timezone.utc).timestamp() * 1000)
@@ -306,16 +445,12 @@ class PlayerStore:
                     else:
                         point["isPayGemFirst"] = True
                         point["nextGemFreeTime"] = now_ms + 172_800_000
-                    serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
-                    self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, int(row[0])))
-                    self.db.commit()
                     existing_key = chosen_key
                 else:
                     point = player.get("point")
                     if not isinstance(point, dict):
                         point = {}
                         player["point"] = point
-                    marker_changed = False
                     defaults = ({"freeCoinTimes": 1, "nextCoinFreeTime": 0} if route == "coin"
                                 else {"isPayGemFirst": True, "nextGemFreeTime": 0})
                     for key, value in defaults.items():
@@ -328,18 +463,18 @@ class PlayerStore:
                             reconciled = current if key in point else value
                         if key not in point or current != reconciled:
                             point[key] = reconciled
-                            marker_changed = True
-                    if marker_changed:
-                        serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
-                        self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, int(row[0])))
-                        self.db.commit()
-                    else:
-                        self.db.rollback()
+                self._recompute_power(player)
+                serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
+                if serialized != row[1]:
+                    self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, int(row[0])))
+                self.db.commit()
                 point = player.get("point", {})
                 response: dict[str, Any] = {
                     "code": 200,
+                    "power": player["power"],
                     "team": {"roles": {str(existing_key): copy.deepcopy(roles[str(existing_key)])}},
-                    "_temp": {"dropList": [{"entityId": int(role_kind), "count": 1, "extra": {"star": 1}}]},
+                    "_temp": {"dropList": [{"entityId": roles[str(existing_key)]["kindId"], "count": 1,
+                                            "extra": {"star": roles[str(existing_key)]["star"]}}]},
                 }
                 if route == "coin":
                     response["point"] = {"freeCoinTimes": point.get("freeCoinTimes", 0), "nextCoinFreeTime": point.get("nextCoinFreeTime", 0)}
@@ -351,6 +486,251 @@ class PlayerStore:
                 raise
 
     @staticmethod
+    def _stack(items: Any, key: Any, count: Any) -> dict[str, Any] | None:
+        if not isinstance(items, dict) or not isinstance(key, str) or not key or type(count) is not int or count <= 0:
+            return None
+        item = items.get(key)
+        if (not isinstance(item, dict) or type(item.get("kindId")) is not int
+                or type(item.get("count")) is not int or item["count"] < count):
+            return None
+        return item
+
+    @staticmethod
+    def _consume(items: dict[str, Any], key: str, count: int) -> None:
+        items[key]["count"] -= count
+        if items[key]["count"] == 0:
+            del items[key]
+
+    def _feature_transaction(
+        self, uid: str, player_id: int, server_id: int,
+        change: Callable[[dict[str, Any]], dict[str, Any] | None], *, changes_team: bool = False,
+    ) -> dict[str, Any] | None:
+        if type(player_id) is not int or player_id <= 0 or type(server_id) is not int or server_id <= 0:
+            return None
+        with self.lock:
+            try:
+                self.db.execute("BEGIN IMMEDIATE")
+                row = self.db.execute(
+                    "SELECT id,payload FROM players WHERE id=? AND uid=? AND server_id=?",
+                    (player_id, uid, server_id),
+                ).fetchone()
+                if row is None:
+                    self.db.rollback()
+                    return None
+                if changes_team and self.db.execute(
+                    "SELECT 1 FROM smap_pending WHERE player_id=? AND expires_at>?",
+                    (player_id, int(time.time())),
+                ).fetchone():
+                    self.db.rollback()
+                    return None
+                before = json.loads(row[1])
+                player = self._normalize_existing(int(row[0]), row[1])
+                response = change(player)
+                if response is None:
+                    self.db.rollback()
+                    return None
+                self._recompute_power(player)
+                for field in ("coin", "gem", "actionPoint", "power", "signInDays", "signInTime"):
+                    if field in player and before.get(field) != player[field]:
+                        response[field] = player[field]
+                bag_delta = self._bag_delta(before.get("bag", {}).get("items", {}), player["bag"]["items"])
+                if bag_delta:
+                    response["bag"] = {"items": bag_delta}
+                roles_delta = self._bag_delta(before["team"]["roles"], player["team"]["roles"])
+                if roles_delta:
+                    response["team"] = {"roles": roles_delta}
+                self.db.execute(
+                    "UPDATE players SET payload=? WHERE id=?",
+                    (json.dumps(player, ensure_ascii=False, separators=(",", ":")), player_id),
+                )
+                self.db.commit()
+                response["code"] = 200
+                return response
+            except Exception:
+                self.db.rollback()
+                raise
+
+    def use_item(self, uid: str, player_id: int, bag_index: Any, item_count: Any, server_id: int = 1) -> dict[str, Any] | None:
+        def change(player: dict[str, Any]) -> dict[str, Any] | None:
+            items = player.get("bag", {}).get("items")
+            item = self._stack(items, bag_index, item_count)
+            if item is None:
+                return None
+            kind_id = item["kindId"]
+            consumable = table("consumablesData").get(kind_id, {})
+            if consumable.get("actionPoint", 0) > 0:
+                if type(player.get("actionPoint")) is not int or player["actionPoint"] < 0:
+                    return None
+                amount = consumable["actionPoint"] * item_count
+                # Consumables add purchased AP; the regeneration cap cannot erase
+                # AP already granted by level-up or other items.
+                player["actionPoint"] += amount
+                rewards = {"99": amount}
+            elif kind_id in range(321, 327):
+                desc = table("entityData")[kind_id]["extra"]["dropListDesc"]
+                drops = self._entity_drop(desc)
+                rewards = self._drop_map(player, tuple((entity, count * item_count) for entity, count in drops))
+            else:
+                return None
+            self._consume(items, bag_index, item_count)
+            return {"_temp": {"entityCountMap": rewards}}
+        return self._feature_transaction(uid, player_id, server_id, change)
+
+    def sell_items(self, uid: str, player_id: int, bag_indices: Any, item_counts: Any, server_id: int = 1) -> dict[str, Any] | None:
+        if (not isinstance(bag_indices, list) or not isinstance(item_counts, list)
+                or not 1 <= len(bag_indices) <= 100 or len(bag_indices) != len(item_counts)
+                or any(not isinstance(index, str) for index in bag_indices)
+                or len(set(bag_indices)) != len(bag_indices)):
+            return None
+        def change(player: dict[str, Any]) -> dict[str, Any] | None:
+            items = player.get("bag", {}).get("items")
+            total = 0
+            for key, count in zip(bag_indices, item_counts):
+                item = self._stack(items, key, count)
+                if item is None:
+                    return None
+                entity = table("entityData").get(item["kindId"])
+                if entity is None or entity["price"] <= 0 or entity["type"] == "role":
+                    return None
+                total += int(entity["price"]) * count
+            if type(player.get("coin")) is not int or player["coin"] < 0:
+                return None
+            for key, count in zip(bag_indices, item_counts):
+                self._consume(items, key, count)
+            player["coin"] += total
+            return {"coin": player["coin"], "_temp": {"entityCountMap": {"101": total}}}
+        return self._feature_transaction(uid, player_id, server_id, change)
+
+    def use_exp_item(self, uid: str, player_id: int, team_index: Any, bag_index: Any, item_count: Any, server_id: int = 1) -> dict[str, Any] | None:
+        if not isinstance(team_index, str) or not team_index:
+            return None
+        def change(player: dict[str, Any]) -> dict[str, Any] | None:
+            role = player["team"]["roles"].get(team_index)
+            items = player.get("bag", {}).get("items")
+            item = self._stack(items, bag_index, item_count)
+            if not role_supported(role) or item is None or not player_supported(player):
+                return None
+            amount = table("consumablesData").get(item["kindId"], {}).get("roleExp", 0)
+            cap = min(role_max_level(player["level"]), max(ROLE_LEVEL_EXPERIENCE))
+            if amount <= 0 or role["level"] > cap:
+                return None
+            capacity = sum(ROLE_LEVEL_EXPERIENCE[level] for level in range(role["level"], cap + 1)) - role["experience"]
+            if capacity <= 0 or item_count > math.ceil(capacity / amount):
+                return None
+            advance_role(role, amount * item_count, player["level"])
+            self._consume(items, bag_index, item_count)
+            return {"_temp": {"entityCountMap": {}}}
+        return self._feature_transaction(uid, player_id, server_id, change, changes_team=True)
+
+    def evolve_equipment(self, uid: str, player_id: int, team_index: Any, equipment_type: Any, server_id: int = 1) -> dict[str, Any] | None:
+        if (not isinstance(team_index, str) or not team_index or not isinstance(equipment_type, str)
+                or equipment_type not in {f"evlItem_{i}" for i in range(1, 7)}):
+            return None
+        def change(player: dict[str, Any]) -> dict[str, Any] | None:
+            role = player["team"]["roles"].get(team_index)
+            if not role_supported(role):
+                return None
+            item = role["equipments"].get(equipment_type)
+            if not isinstance(item, dict) or type(item.get("kindId")) is not int:
+                return None
+            current = table("evolutionItemData").get(item["kindId"])
+            target_id = current.get("evolutionItemId") if current else None
+            target = table("evolutionItemData").get(target_id)
+            # First green tier only: later passive/buff effects remain unmapped.
+            if target is None or table("entityData")[target_id]["color"] != 2:
+                return None
+            if type(item.get("level")) is not int or not 1 <= item["level"] <= role["level"]:
+                return None
+            items = player["bag"]["items"]
+            before = copy.deepcopy(items)
+            for entity, required in zip(target["requiredIds"], target["requiredCounts"]):
+                remaining = required
+                for key in list(items):
+                    material = items[key]
+                    if isinstance(material, dict) and material.get("kindId") == entity:
+                        if self._stack(items, key, 1) is None:
+                            return None
+                        count = min(remaining, material["count"])
+                        self._consume(items, key, count)
+                        remaining -= count
+                        if remaining == 0:
+                            break
+                if remaining:
+                    return None
+            # EQUIPMENTS.getEvolveCost(target color), project.js:49748.
+            if type(player.get("coin")) is not int or player["coin"] < 100:
+                return None
+            player["coin"] -= 100
+            item["kindId"] = target_id
+            self._update_role_equipment_attrs(role)
+            return {"coin": player["coin"], "bag": {"items": self._bag_delta(before, items)}, "_temp": {}}
+        return self._feature_transaction(uid, player_id, server_id, change, changes_team=True)
+
+    def sign_in(self, uid: str, player_id: int, now_ms: int | None = None, server_id: int = 1) -> dict[str, Any] | None:
+        now_ms = int(time.time() * 1000) if now_ms is None else now_ms
+        if type(now_ms) is not int or not 0 < now_ms < 253402275600000:
+            return None
+        def change(player: dict[str, Any]) -> dict[str, Any] | None:
+            old_time, days = player.get("signInTime", 0), player.get("signInDays", 0)
+            if type(old_time) is not int or type(days) is not int or old_time < 0 or days < 0:
+                return None
+            # Client sign-in uses isNextDay, not the separate 05:00 stage reset.
+            zone = _dt.timezone(_dt.timedelta(hours=7))
+            today = _dt.datetime.fromtimestamp(now_ms / 1000, zone).date()
+            if old_time >= now_ms or old_time and _dt.datetime.fromtimestamp(old_time / 1000, zone).date() >= today:
+                return None
+            row = table("signInData").get(days + 1)
+            if row is None:
+                return None
+            desc = row["dropListDesc"]
+            multiplier = 2 if row["doubleVip"] >= 0 and player["vip"]["level"] >= row["doubleVip"] else 1
+            if "_star_" in desc:
+                entity_text, rest = desc.split("_star_", 1)
+                star_text, count_text = rest.split("x", 1)
+                entity, star = int(entity_text), int(star_text)
+                if int(count_text) != 1 or multiplier != 1:
+                    return None
+                role = self._build_role(entity, star)
+                if role is None:
+                    return None
+                roles = player["team"]["roles"]
+                if any(isinstance(existing, dict) and type(existing.get("kindId")) is int
+                       and existing["kindId"] // 100 == entity // 100 for existing in roles.values()):
+                    # Duplicate-role conversion has no confirmed local contract.
+                    return None
+                roles[self._next_bag_index(roles)] = role
+                rewards = {str(entity): 1}
+            else:
+                rewards = self._drop_map(player, tuple((entity, count * multiplier) for entity, count in self._entity_drop(desc)))
+            player["signInDays"], player["signInTime"] = days + 1, now_ms
+            return {"signInDays": days + 1, "signInTime": now_ms, "_temp": {"entityCountMap": rewards}}
+        return self._feature_transaction(uid, player_id, server_id, change)
+
+    def evolve_role(self, uid: str, player_id: int, team_index: Any, server_id: int = 1) -> dict[str, Any] | None:
+        if not isinstance(team_index, str) or not team_index:
+            return None
+        def change(player: dict[str, Any]) -> dict[str, Any] | None:
+            role = player["team"]["roles"].get(team_index)
+            if not role_supported(role):
+                return None
+            row = table("roleData")[role["kindId"]]
+            target_id = row["evolutionRoleId"]
+            if target_id not in SUPPORTED_ROLE_IDS or table("entityData")[target_id]["color"] != 2:
+                return None
+            target = table("roleData")[target_id]
+            for index, kind_id in enumerate(target["initEvlItemIds"], 1):
+                item = role["equipments"].get(f"evlItem_{index}")
+                if not isinstance(item, dict) or item.get("kindId") != kind_id:
+                    return None
+            before = copy.deepcopy(role)
+            role["kindId"] = target_id
+            # Green unlocks skillIds[1]; retain all existing skill levels.
+            skill_id = row["skillIds"][1]
+            role["skills"].setdefault(str(skill_id), {"kindId": skill_id, "level": 1})
+            return {"coin": player["coin"], "_temp": {"preRole": before}}
+        return self._feature_transaction(uid, player_id, server_id, change, changes_team=True)
+
+    @staticmethod
     def _canonical_team_indices(team_indices: Any) -> tuple[str, ...] | None:
         if not isinstance(team_indices, list) or not 1 <= len(team_indices) <= 5:
             return None
@@ -360,33 +740,12 @@ class PlayerStore:
             return None
         return tuple(sorted(team_indices))
 
-    @staticmethod
-    def _first_battle_role_supported(role: Any) -> bool:
-        if not isinstance(role, dict):
-            return False
-        scalar_types = {
-            "kindId": int, "level": int, "star": int, "awakeLevel": int,
-            "experience": int, "nextLevelExp": int, "power": (int, float), "mp": (int, float),
-        }
-        for key, expected in scalar_types.items():
-            value = role.get(key)
-            if isinstance(value, bool) or not isinstance(value, expected):
-                return False
-        if role["level"] != 1 or role["experience"] != 0 or role["nextLevelExp"] != 25:
-            return False
-        attr = role.get("attr")
-        if not isinstance(attr, dict):
-            return False
-        if any(isinstance(attr.get(key), bool) or not isinstance(attr.get(key), (int, float))
-               for key in ("hp", "atk", "def", "mdef", "hit", "dodge", "crit")):
-            return False
-        return isinstance(role.get("skills"), dict) and isinstance(role.get("awakeSkills"), dict)
-
     def begin_smap(self, uid: str, player_id: int, smap_id: Any, team_indices: Any, server_id: int = 1) -> dict[str, Any] | None:
-        """Begin only APK SMAP 10101; combat itself remains client-simulated."""
+        """Begin one supported first-map SMAP; combat remains client-simulated."""
         canonical = self._canonical_team_indices(team_indices)
-        if type(player_id) is not int or player_id <= 0 or type(smap_id) is not int or smap_id != _FIRST_SMAP_ID or canonical is None:
+        if type(player_id) is not int or player_id <= 0 or type(smap_id) is not int or smap_id not in FIRST_MAP_RULES or canonical is None:
             return None
+        rule = FIRST_MAP_RULES[smap_id]
         encoded_indices = json.dumps(canonical, separators=(",", ":"))
         now = int(time.time())
         with self.lock:
@@ -414,21 +773,23 @@ class PlayerStore:
                     self.db.rollback()
                     return None
 
-                stars = player.get("smapStarMap", {}).get("1", {}).get("101", {}).get("10101")
-                attempts = player.get("smapTimesMap", {}).get("1", {}).get("101", {}).get("10101")
+                stage_key = str(smap_id)
+                stage_stars = player.get("smapStarMap", {}).get("1", {}).get("101", {})
+                stage_times = player.get("smapTimesMap", {}).get("1", {}).get("101", {})
+                stars = stage_stars.get(stage_key, 0)
+                attempts = stage_times.get(stage_key, 0)
                 action_point = player.get("actionPoint")
                 roles = player.get("team", {}).get("roles")
-                player_xp = player.get("experience")
-                if (type(stars) is not int or stars != 0 or type(attempts) is not int
-                        or not 0 <= attempts < _FIRST_SMAP_ATTEMPTS
-                        or type(action_point) is not int or action_point < _FIRST_SMAP_AP
-                        or type(player.get("level")) is not int or player["level"] != 1
-                        or type(player_xp) is not int or not 0 <= player_xp <= 18
-                        or player.get("nextLevelExp") != 25 or not isinstance(roles, dict)
-                        or any(index not in roles or not self._first_battle_role_supported(roles[index]) for index in canonical)):
+                previous_unlocked = smap_id == 10101 or stage_stars.get(str(smap_id - 1), 0) > 0
+                if (type(stars) is not int or stars < 0 or (stars > 0 and not rule.repeatable)
+                        or type(attempts) is not int or not 0 <= attempts < rule.attempts
+                        or type(action_point) is not int or action_point < rule.action_point
+                        or not player_supported(player) or not previous_unlocked
+                        or not isinstance(roles, dict)
+                        or any(index not in roles or not role_supported(roles[index]) for index in canonical)):
                     self.db.rollback()
                     return None
-                player["actionPoint"] = action_point - _FIRST_SMAP_AP
+                player["actionPoint"] = action_point - rule.action_point
                 self.db.execute(
                     "INSERT INTO smap_pending(player_id,uid,server_id,smap_id,team_indices,expires_at) VALUES(?,?,?,?,?,?)",
                     (player_id, uid, server_id, smap_id, encoded_indices, now + _SMAP_PENDING_TTL_SECONDS),
@@ -469,19 +830,22 @@ class PlayerStore:
                     self.db.execute("DELETE FROM smap_pending WHERE player_id=?", (player_id,))
                     self.db.commit()
                     return None
-                if (int(pending[0]) != _FIRST_SMAP_ID or pending[1] != encoded_indices
+                if (int(pending[0]) not in FIRST_MAP_RULES or pending[1] != encoded_indices
                         or pending[3] != uid or int(pending[4]) != server_id):
                     self.db.rollback()
                     return None
 
                 player = json.loads(row[1])
+                smap_id = int(pending[0])
+                rule = FIRST_MAP_RULES[smap_id]
+                stage_key = str(smap_id)
                 times_type_one = player["smapTimesMap"]["1"]
                 stage_times = times_type_one["101"]
-                attempts = stage_times.get("10101")
-                if type(attempts) is not int or not 0 <= attempts < _FIRST_SMAP_ATTEMPTS:
+                attempts = stage_times.get(stage_key, 0)
+                if type(attempts) is not int or not 0 <= attempts < rule.attempts:
                     self.db.rollback()
                     return None
-                stage_times["10101"] = attempts + 1
+                stage_times[stage_key] = attempts + 1
                 response: dict[str, Any] = {
                     "code": 200,
                     "actionPoint": player["actionPoint"],
@@ -491,24 +855,35 @@ class PlayerStore:
                 if star > 0:
                     roles = player.get("team", {}).get("roles")
                     if (not isinstance(roles, dict)
-                            or any(index not in roles or not self._first_battle_role_supported(roles[index]) for index in canonical)
-                            or type(player.get("coin")) is not int or type(player.get("experience")) is not int
-                            or player.get("nextLevelExp") != 25
-                            or player["smapStarMap"]["1"]["101"].get("10101") != 0):
+                            or any(index not in roles or not role_supported(roles[index]) for index in canonical)
+                            or type(player.get("coin")) is not int or not player_supported(player)):
                         self.db.rollback()
                         return None
-                    player["coin"] += _FIRST_SMAP_COIN
-                    player["experience"] += _FIRST_SMAP_PLAYER_XP
+                    player["coin"] += rule.coin
+                    player_leveled = advance_player(player, rule.player_experience)
                     for index in canonical:
-                        roles[index]["experience"] += _FIRST_SMAP_ROLE_XP
+                        advance_role(roles[index], rule.role_experience, player["level"])
+                    self._recompute_power(player)
                     star_type_one = player["smapStarMap"]["1"]
-                    star_type_one["101"]["10101"] = star
+                    old_star = star_type_one["101"].get(stage_key, 0)
+                    star_type_one["101"][stage_key] = max(old_star, star)
+                    entity_count = self._drop_map(player, rule.drops)
                     response.update({
                         "coin": player["coin"],
                         "experience": player["experience"],
+                        "actionPoint": player["actionPoint"],
                         "smapStarMap": {"1": copy.deepcopy(star_type_one)},
                         "team": {"roles": {index: copy.deepcopy(roles[index]) for index in canonical}},
+                        "power": player["power"],
+                        "bag": {"items": copy.deepcopy(player["bag"]["items"])},
                     })
+                    response["_temp"]["entityCountMap"] = entity_count
+                    if player_leveled:
+                        response.update({
+                            "level": player["level"],
+                            "nextLevelExp": player["nextLevelExp"],
+                            "timesMaxMap": copy.deepcopy(player["timesMaxMap"]),
+                        })
                 self.db.execute("DELETE FROM smap_pending WHERE player_id=?", (player_id,))
                 serialized = json.dumps(player, ensure_ascii=False, separators=(",", ":"))
                 self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, player_id))
