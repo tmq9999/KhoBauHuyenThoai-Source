@@ -1,0 +1,73 @@
+{
+  "comparison": {
+    "sharedProductSceneCount": 36
+  },
+  "generatedBy": "reference-index.py",
+  "referenceArtifacts": [
+    {
+      "assetExtensionCounts": {
+        "atlas": 248,
+        "bin": 0,
+        "jpg": 658,
+        "js": 43,
+        "jsc": 3,
+        "json": 3558,
+        "mp3": 493,
+        "other": 4,
+        "png": 1455
+      },
+      "assetFileCount": 6462,
+      "crcFirstBadEntry": null,
+      "fileName": "KhoBauHuyenThoai-VN.apk",
+      "id": "vn",
+      "manifestAssetCount": 6454,
+      "manifestCoverage": {
+        "ambiguousPaths": 0,
+        "checksumStatus": "not-evaluated",
+        "missingPaths": 72
+      },
+      "manifestVersion": "1.0.0.02",
+      "sceneCounts": {
+        "allSerialized": 37,
+        "product": 36
+      },
+      "sha256": "d61d4ae1994ec5bcafdcfaf2406cc88ed9611cbb65da853027799d50d6687eb4",
+      "sizeBytes": 100972543,
+      "uncompressedBytes": 177372336,
+      "zipEntries": 7083
+    },
+    {
+      "assetExtensionCounts": {
+        "atlas": 384,
+        "bin": 386,
+        "jpg": 1084,
+        "js": 3,
+        "jsc": 5,
+        "json": 8789,
+        "mp3": 713,
+        "other": 5,
+        "png": 2972
+      },
+      "assetFileCount": 14341,
+      "crcFirstBadEntry": null,
+      "fileName": "sp-071023.apk",
+      "id": "sp-comparator",
+      "manifestAssetCount": 14335,
+      "manifestCoverage": {
+        "ambiguousPaths": 0,
+        "checksumStatus": "not-evaluated",
+        "missingPaths": 0
+      },
+      "manifestVersion": "1.0.0.38",
+      "sceneCounts": {
+        "allSerialized": 41,
+        "product": 41
+      },
+      "sha256": "b69427af63e668364a20c64c3a9d9440e498f9e88c15ddbe233fe5929edaf14b",
+      "sizeBytes": 208003536,
+      "uncompressedBytes": 262567007,
+      "zipEntries": 15795
+    }
+  ],
+  "schemaVersion": 1
+}

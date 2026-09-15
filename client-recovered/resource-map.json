@@ -1,0 +1,23 @@
+{
+  "status": "PARTIAL",
+  "source_apk": "APK/KhoBauHuyenThoai-VN.apk",
+  "apktool_tree": "work/apk-vn/20260914T180000Z/apktool",
+  "assets": {
+    "main_js": "assets/main.js (APK-authoritative; verified by SHA-256)",
+    "recovered_scripts": {
+      "settings.js": "assets/src/settings.jsc",
+      "jsb_polyfill.js": "assets/src/jsb_polyfill.jsc",
+      "project.js": "assets/src/project.jsc"
+    },
+    "other_assets": "retained from the pinned Apktool tree; no opaque files copied into src/"
+  },
+  "native": {
+    "arm64-v8a": "prebuilt",
+    "armeabi-v7a": "prebuilt",
+    "x86": "prebuilt"
+  },
+  "scenes": {
+    "status": "not fully mapped",
+    "note": "Decoded settings/project are retained for follow-up UUID/import/scene analysis."
+  }
+}

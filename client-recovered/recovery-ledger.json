@@ -1,0 +1,31 @@
+{
+  "status": "EDITABLE_CLIENT_BUILD_PARTIAL",
+  "original_apk": {
+    "path": "APK/KhoBauHuyenThoai-VN.apk",
+    "sha256": "d61d4ae1994ec5bcafdcfaf2406cc88ed9611cbb65da853027799d50d6687eb4"
+  },
+  "native": {
+    "path": "work/apk-vn/20260914T180000Z/apktool/lib/arm64-v8a/libcocos2djs.so",
+    "sha256": "e348349e9c7ab476463092eee1f398eb360e37a74f9d96bf987ba43e164558d3"
+  },
+  "apktool": {
+    "path": "tools/decompiler/apktool_3.0.3.jar",
+    "version": "3.0.3",
+    "sha256": "dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423"
+  },
+  "sources": {
+    "settings.js": "9c172efdc2c20f0543d25bce3a40c42b6aa6e8953bff873d1e8ec914ef482d47",
+    "jsb_polyfill.js": "a5ba198936479dbbdaf14c03a88f9e70eb56a01509956b6ac963c93f886ac4a3",
+    "project.js": "9776b6e20978d5d911bc0abb85830820bac5a3bfb8db4e65a617c5d18646a818"
+  },
+  "apk_payloads": {
+    "assets/main.js": "2647dbb614375858ed2ed2569c46205cdec09b2d648f6c872baad2f23e2be8f7",
+    "assets/src/settings.jsc": "11e4b984a17b9c2b8a2ea054c2c16ebfd140e7fbfc23020e9aef4c31a0be8fd1",
+    "assets/src/jsb_polyfill.jsc": "6119d0112965b2d921014e2f5161845488d06d37fc155807cfdd5862e28d45a9",
+    "assets/src/project.jsc": "c8e81942674e02aa042d35b95feadb28588f9468d1fbcbe86f6b6fc4efeeb0a1"
+  },
+  "source_origin": "work/apk-vn/20260914T140500Z-efc5da6a/recovered-js",
+  "base_apktool_tree": "work/apk-vn/20260914T180000Z/apktool",
+  "native_source_status": "prebuilt-only",
+  "cocos_project_status": "not-recovered"
+}
