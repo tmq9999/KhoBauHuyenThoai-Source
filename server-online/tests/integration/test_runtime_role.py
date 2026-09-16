@@ -9,6 +9,7 @@ from kbht_server.db.session import open_engine
 from kbht_server.db.migrations import check_invariants
 from kbht_server.db.uow import CommandExecutor
 from kbht_server.workers.outbox import OutboxConsumer
+from kbht_server.workers.poller import OutboxPoller
 
 
 @pytest.fixture()
@@ -38,6 +39,7 @@ def runtime_lab(pg_lab):
             connection.execute(text(f'REVOKE UPDATE (version, updated_at) ON players FROM "{role}"'))
             connection.execute(text(f'REVOKE UPDATE (balance, version, updated_at) ON wallets FROM "{role}"'))
             connection.execute(text(f'REVOKE UPDATE (quantity, version, updated_at) ON inventory_items FROM "{role}"'))
+            connection.execute(text(f'REVOKE UPDATE (status, attempts, lease_token, lease_expires_at, next_attempt_at, last_error_code, updated_at) ON outbox_deliveries FROM "{role}"'))
             for table, column in (("game_servers", "id"), ("content_versions", "id"),
                                   ("item_definitions", "content_version_id"), ("outbox_events", "id")):
                 connection.execute(text(f'REVOKE UPDATE ({column}) ON {table} FROM "{role}"'))
@@ -67,6 +69,17 @@ def test_runtime_can_settle_inventory_wallet_receipt_and_consume_event(runtime_l
     assert lab.wallet(10001, "gem") == 40
     assert lab.wallet(10001, "coin") == 100
     assert not any(check_invariants(runtime).values())
+
+
+def test_runtime_can_poll_lease_and_finish_delivery(runtime_lab):
+    lab, runtime, role = runtime_lab
+    event_id = lab.emit_progress_event(10001, "drawTimes", 1)
+    def handler(connection, event):
+        assert connection.execute(text("SELECT current_user")).scalar_one() == role
+    worker = OutboxPoller(OutboxConsumer(runtime, "runtime-poller", {"test.progress": handler}))
+    assert worker.poll_once() == "DONE"
+    assert worker.poll_once() == "IDLE"
+    assert lab.worker_receipt_count(event_id) == 1
 
 
 @pytest.mark.parametrize("sql", [

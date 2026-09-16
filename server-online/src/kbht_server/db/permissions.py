@@ -9,12 +9,12 @@ READ_TABLES = (
     "players", "game_servers", "content_versions", "item_definitions", "wallets",
     "ledger_transactions", "ledger_postings", "wallet_ledger", "command_receipts",
     "inventory_items", "inventory_ledger", "reward_grants", "reward_items",
-    "reward_currencies", "outbox_events", "worker_receipts", "alembic_version",
+    "reward_currencies", "outbox_events", "worker_receipts", "outbox_deliveries", "alembic_version",
 )
 INSERT_TABLES = (
     "ledger_transactions", "ledger_postings", "wallet_ledger", "command_receipts",
     "inventory_items", "inventory_ledger", "reward_grants", "reward_items",
-    "reward_currencies", "outbox_events", "worker_receipts",
+    "reward_currencies", "outbox_events", "worker_receipts", "outbox_deliveries",
 )
 UPDATE_COLUMNS = {
     "players": {"version", "updated_at"},
@@ -24,6 +24,8 @@ UPDATE_COLUMNS = {
     "content_versions": {"id"},
     "item_definitions": {"content_version_id"},
     "outbox_events": {"id"},
+    "outbox_deliveries": {"status", "attempts", "lease_token", "lease_expires_at",
+                          "next_attempt_at", "last_error_code", "updated_at"},
 }
 
 

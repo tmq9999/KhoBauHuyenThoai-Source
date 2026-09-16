@@ -32,6 +32,22 @@ All notable project changes are recorded here. Dates use `YYYY-MM-DD`.
   `pg_dump`/`pg_restore` round trip of generated test schemas. The tests verify
   inventory, reward, wallet, command replay and worker dedup survive restoration.
 
+### Leased outbox worker and Compose model
+
+- Added persisted outbox delivery leases with `SKIP LOCKED`, immutable retry
+  budgets, stale-worker fencing, bounded backoff and dead-letter quarantine.
+  Direct consumers and pollers share one receipt transaction; terminal deliveries
+  cannot be reopened or bypassed.
+- Added poller tests covering concurrent claims, lease expiry, direct races,
+  handler/database failure, process restart and poison events.
+- Added digest-pinned loopback Compose model for PostgreSQL 18 dev/test and
+  ephemeral Redis 8.2.9 with file-based secrets. Compose CLI validation passes;
+  Docker Engine is not installed on this development machine, so container
+  health is not claimed.
+- Added delivery reconciliation invariants and race tests: completed receipts
+  win over stale leases, direct delivery cannot bypass dead-letter quarantine,
+  and failed receipt/projection transactions retry without duplicate state.
+
 ### Technical documentation and outbox consumption
 
 - Reorganized the root and backend READMEs into architecture, module/data

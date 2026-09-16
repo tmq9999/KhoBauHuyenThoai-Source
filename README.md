@@ -11,7 +11,7 @@ Native APK -> HTTP / Pomelo-WebSocket -> server-compatible -> SQLite
 
 CLI / Python commands -> server-online -> PostgreSQL
                             |
-                            +-> command receipts / ledger / outbox
+                            +-> command receipts / ledger / outbox / leased poller
 ```
 
 Hai backend có entry point và database riêng, không dual-write.

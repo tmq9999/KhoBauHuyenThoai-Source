@@ -126,6 +126,26 @@ worker_receipts = Table(
     CheckConstraint("length(consumer) > 0", name="ck_worker_receipts_consumer"),
 )
 
+outbox_deliveries = Table(
+    "outbox_deliveries", metadata,
+    Column("consumer", String(80), primary_key=True),
+    Column("event_id", UUID(as_uuid=True), ForeignKey("outbox_events.id"), primary_key=True),
+    Column("status", String(16), nullable=False, server_default="READY"),
+    Column("attempts", Integer, nullable=False, server_default="0"),
+    Column("max_attempts", Integer, nullable=False, server_default="5"),
+    Column("lease_token", UUID(as_uuid=True)),
+    Column("lease_expires_at", DateTime(timezone=True)),
+    Column("next_attempt_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+    Column("last_error_code", String(64)),
+    Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+    Column("updated_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+    CheckConstraint("status IN ('READY', 'LEASED', 'DONE', 'RETRY', 'DEAD')", name="ck_outbox_delivery_status"),
+    CheckConstraint("attempts BETWEEN 0 AND 100", name="ck_outbox_delivery_attempts"),
+    CheckConstraint("max_attempts BETWEEN 1 AND 100 AND attempts <= max_attempts", name="ck_outbox_delivery_budget"),
+    CheckConstraint("(status = 'LEASED' AND lease_token IS NOT NULL AND lease_expires_at IS NOT NULL) OR "
+                    "(status != 'LEASED' AND lease_token IS NULL AND lease_expires_at IS NULL)", name="ck_outbox_delivery_lease"),
+)
+
 item_definitions = Table(
     "item_definitions", metadata,
     Column("content_version_id", UUID(as_uuid=True), ForeignKey("content_versions.id"), primary_key=True),

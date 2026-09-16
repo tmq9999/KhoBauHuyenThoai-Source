@@ -82,6 +82,14 @@ def check_invariants(engine: Engine) -> dict[str, int]:
               ON r.grant_id = l.grant_id AND r.currency = l.currency
             WHERE r.grant_id IS NULL OR l.grant_id IS NULL OR r.quantity != l.quantity
         """,
+        "delivery_mismatches": """
+            SELECT count(*) FROM outbox_deliveries d LEFT JOIN outbox_events e ON e.id = d.event_id
+            LEFT JOIN worker_receipts r ON r.consumer = d.consumer AND r.event_id = d.event_id
+            WHERE e.id IS NULL OR d.attempts < 0 OR d.attempts > d.max_attempts
+              OR (d.status = 'DONE' AND r.event_id IS NULL)
+              OR (d.status = 'LEASED' AND (d.lease_token IS NULL OR d.lease_expires_at IS NULL))
+              OR (d.status != 'LEASED' AND (d.lease_token IS NOT NULL OR d.lease_expires_at IS NOT NULL))
+        """,
     }
     with engine.connect().execution_options(isolation_level="REPEATABLE READ") as connection:
         with connection.begin():

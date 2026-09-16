@@ -237,14 +237,14 @@ export function formatPower(value) {
 Current execution status: PostgreSQL 18.6 portable cluster, isolated Python
 environment, hash lock, frozen Alembic core revision, command receipts, ledger,
 outbox writes and migration CLI have local PostgreSQL test evidence. M1.1 remains
-IN_PROGRESS: runtime operational provisioning, polling/backoff, Compose/Redis
-reproducibility and delivery review remain. A least-privilege runtime grant
+IN_PROGRESS: runtime operational provisioning, Compose/Redis engine smoke and
+delivery review remain. A least-privilege runtime grant
 function, process-loss-before/after-commit tests and a schema dump/restore drill
 have local evidence. Inventory/rewards and two-player wallet/command fixtures
 have real-PostgreSQL test evidence, including source dedup across command IDs,
 stack ownership, concurrency and rollback. Explicit-delivery outbox
-consumption/dedup have PostgreSQL evidence; polling/backoff and real task rules
-are separate remaining work.
+consumption/dedup and bounded polling/backoff have PostgreSQL evidence; engine
+smoke and real task rules are separate remaining work.
 Content import, auth, native adapter and gameplay routes also remain open.
 
 Environment preparation: local Python 3.12.9 venv created and isolation checked.

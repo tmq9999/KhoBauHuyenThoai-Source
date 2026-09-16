@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
 import pytest
@@ -15,9 +16,10 @@ from kbht_server.db.schema import (
     accounts, command_receipts, content_versions, game_servers, inventory_items,
     inventory_ledger, item_definitions, ledger_postings, ledger_transactions,
     outbox_events, players, reward_currencies, reward_grants, reward_items, wallets, wallet_ledger,
-    worker_receipts,
+    worker_receipts, outbox_deliveries,
 )
 from kbht_server.db.uow import CommandExecutor
+from kbht_server.workers.poller import OutboxPoller
 
 
 def checked_test_schema(engine):
@@ -84,10 +86,11 @@ def test_dump_restore_retains_reward_receipts_items_and_worker_dedup(pg_lab, tmp
     executor = CommandExecutor(pg_lab.engine, {command.route: reward_handler})
     saved = executor.execute(command)
     event_id = pg_lab.emit_progress_event(10002, "drawTimes", 1)
-    assert pg_lab.consume_progress_event(event_id) is True
+    assert OutboxPoller(pg_lab.consumer()).poll_once() == "DONE"
     tables = (accounts, players, content_versions, game_servers, item_definitions, wallets,
               ledger_transactions, ledger_postings, wallet_ledger, command_receipts, outbox_events,
-              inventory_items, inventory_ledger, reward_grants, reward_items, reward_currencies, worker_receipts)
+              inventory_items, inventory_ledger, reward_grants, reward_items, reward_currencies,
+              worker_receipts, outbox_deliveries)
 
     def snapshot():
         with pg_lab.engine.connect() as connection:
@@ -119,3 +122,18 @@ def test_dump_restore_retains_reward_receipts_items_and_worker_dedup(pg_lab, tmp
     assert pg_lab.consume_progress_event(event_id) is False
     assert pg_lab.progress(10002, "drawTimes") == 1
     assert not any(check_invariants(pg_lab.engine).values())
+
+
+@pytest.mark.parametrize("phase,exit_code", [("after-claim", 80), ("in-handler", 81), ("after-commit", 82)])
+def test_worker_process_loss_reclaims_lease_without_duplicate_projection(pg_lab, phase, exit_code):
+    schema = checked_test_schema(pg_lab.engine)
+    event_id = pg_lab.emit_progress_event(10001, "drawTimes", 1)
+    child = subprocess.run([sys.executable, "-I", str(Path(__file__).parents[1] / "crash_poller.py"), schema, phase],
+                           capture_output=True, text=True, timeout=20)
+    assert child.returncode == exit_code, child.stderr
+    assert pg_lab.progress(10001, "drawTimes") == (1 if phase == "after-commit" else 0)
+    clock = lambda: datetime(2026, 9, 16, tzinfo=timezone.utc) + timedelta(seconds=3)
+    result = OutboxPoller(pg_lab.consumer(), clock=clock).poll_once()
+    assert result == ("IDLE" if phase == "after-commit" else "DONE")
+    assert pg_lab.worker_receipt_count(event_id) == 1
+    assert pg_lab.progress(10001, "drawTimes") == 1

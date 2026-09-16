@@ -20,6 +20,7 @@ The complete service architecture is defined in the
 | `src/kbht_server/db/alembic/versions/` | Frozen SQL revisions packaged with the backend |
 | `src/kbht_server/db/migrations.py` | Transactional migration and read-only invariant checks |
 | `src/kbht_server/workers/outbox.py` | `OutboxConsumer.consume` and typed `OutboxEvent` |
+| `src/kbht_server/workers/poller.py` | Leased discovery, fencing, retry/backoff and dead-letter state |
 | `src/kbht_server/cli.py` | `migrate`, `check-invariants` |
 | `tests/pg_lab.py` | Two-account PostgreSQL fixture, opening ledger and test-only projection |
 
@@ -50,6 +51,12 @@ rejects query overrides. Test configuration never falls back to the development
 DSN. The CLI reads process environment variables, not dotenv automatically;
 [.env.example](.env.example) is a reference. Connections set UTC, a 5-second
 connect timeout, a 15-second statement timeout and a 10-second lock timeout.
+
+Compose uses `KBHT_POSTGRES_PASSWORD_FILE` and `KBHT_REDIS_ACL_FILE` explicitly;
+the repository includes [redis.acl.example](redis.acl.example) with the default
+Redis user disabled. Replace it with an ignored ACL file containing a dedicated
+application user before starting Redis. Never use the bootstrap PostgreSQL
+password as an application password in a shared environment.
 
 For the workspace portable PostgreSQL 18.6 installation, configure paths once:
 
@@ -160,7 +167,8 @@ from a different content version fails `CONTENT_UNAVAILABLE` until migrated.
 `item_definitions` can be edited only while its content version is `DRAFT`.
 Published content/provenance and item/reward ledgers reject mutation/deletion;
 publication changes use a new version, not an edit or unpublish-in-place.
-Additive revisions are `0003_inventory_rewards` and `0004_content_immutability`.
+Additive revisions are `0003_inventory_rewards`, `0004_content_immutability`,
+`0005_runtime_guards` and `0006_outbox_delivery`.
 Handlers must propagate a failed domain operation so the executor rolls back
 all wallet/item/grant/receipt/event writes, rather than committing partial work.
 
@@ -187,6 +195,17 @@ an HTTP request or payment callback exactly-once. Independent event handlers
 must use row locks or atomic upserts for shared projections. The consumer is
 an explicit-delivery API, not a polling/scheduling service.
 
+`OutboxPoller` adds explicit delivery scheduling: `discover()` registers
+supported event types, `claim()` creates a persisted lease, `perform()` fences
+stale workers and runs the handler, and `poll_once()` returns `DONE`, `RETRY`,
+`DEAD`, `LOST` or `IDLE`. Retry budget, lease token, next-attempt time and
+last-error code are stored in `outbox_deliveries`. Backoff is bounded
+exponentially. Receipt, projection and `DONE` state commit together; a direct
+consumer and poller sharing an event cannot double-apply it. Terminal records,
+retry budget, identity and deletion are database-guarded. `run(stop)` is a
+caller-owned loop and performs no external side effects. Migration
+`0006_outbox_delivery` is required.
+
 `tests/pg_lab.py` seeds two accounts with opening ledger entries. The internal
 purchase command and projection counter are test fixtures, not player routes,
 shop prices or daily-task rules.
@@ -212,3 +231,23 @@ replay, worker receipts and invariants. They never target `kbht_core` or the
 SQLite game database. Runtime tests create and remove only their generated
 `kbht_test_runtime_<uuid>` roles. Backups are synthetic test artifacts; this is
 not a production PITR/RPO/RTO procedure.
+
+## Compose model
+
+`compose.yaml` models local dev/test PostgreSQL and Redis only. Images are pinned
+by digest. PostgreSQL 18 stores data under `/var/lib/postgresql`, with separate
+loopback ports `25433` (`kbht_dev`) and `25434` (`kbht_test`); Redis is loopback
+`26379`, ACL-file authenticated and configured without AOF/RDB persistence.
+Secrets are required through `KBHT_POSTGRES_PASSWORD_FILE` and
+`KBHT_REDIS_ACL_FILE`; default passwords are not embedded. Validate without an
+engine:
+
+```powershell
+$env:KBHT_POSTGRES_PASSWORD_FILE = (Resolve-Path 'work/m1-env/secrets/postgres-superuser.txt').Path
+$env:KBHT_REDIS_ACL_FILE = (Resolve-Path 'server-online/redis.acl.example').Path
+& '.\work\m1-env\download\docker-compose-v5.5.1.exe' -f compose.yaml config --format json
+Remove-Item Env:KBHT_POSTGRES_PASSWORD_FILE, Env:KBHT_REDIS_ACL_FILE
+```
+
+The current machine has no Docker Engine. Compose syntax/interpolation is tested;
+container health and Redis connectivity require a Docker-enabled host.

@@ -1,0 +1,3 @@
+# Local lab only. The default Redis user is disabled; add a dedicated
+# application user and mount a generated file outside Git for real use.
+user default off

@@ -331,3 +331,41 @@ dependencies present and the cluster listening on loopback only.
   display patch and snapshot defaults as well as this M1 foundation. This keeps
   README commands and their code together. The local delivery is not a remote
   push or completed M0/M1 acceptance; the SDK-source distribution gate remains.
+
+## 2026-09-16 - Leased worker, Compose model and M1.1 hardening
+
+- Added `0006_outbox_delivery`: persisted READY/LEASED/RETRY/DONE/DEAD state,
+  immutable retry budget, lease token/expiry, next-attempt and sanitized error
+  code. Poller discovers registered event types, claims with `SKIP LOCKED`, fences
+  stale workers and executes handler/receipt/DONE state in one transaction.
+- Added direct-delivery quarantine and delivery reconciliation. Completed receipts
+  win over stale leases; terminal DEAD/DONE records cannot reopen; retry budget and
+  identity are immutable. Full server suite now reports 206 passed after all
+  poller/ACL/recovery additions.
+- Added `compose.yaml` with pinned PostgreSQL 18 dev/test and Redis 8.2.9 images,
+  loopback ports, PostgreSQL 18 volume layout and required secret paths. Compose
+  v5.5.1 binary plus hash/sidecar were verified; CLI model tests pass. Docker
+  Engine is absent, so no container smoke or Redis health claim is made.
+- M1.1 service evidence now covers inventory/reward, runtime ACL, process loss,
+  schema restore, outbox consumer and leased poller. Operational login
+  provisioning, engine smoke, production backup policy and real task processing
+  remain. Next runbook task is M1.2 non-executing content import and legacy
+  SQLite reconciliation after delivery review.
+- Final checks after lease/receipt fixes: server **206 passed in 94.67s**;
+  recovery **266 passed, 4 skipped**; Node formatter 1 passed; route inventory
+  230/231 verified; Compose CLI config pass; `pip check`, compileall and diff
+  checks pass. PostgreSQL `kbht_core` is at `0006_outbox_delivery` with eight
+  invariant counters zero. Docker Engine is absent, so no container smoke claim.
+
+## 2026-09-16 - M1.1 delivery checkpoint
+
+- Current uncommitted continuation is bounded to leased outbox delivery and
+  local Compose reproducibility. It does not add gameplay routes, auth, content
+  import or native APK wiring.
+- M1.1 service tests now cover the poller, runtime ACL, inventory/rewards,
+  crash/restore and command ledger. Compose is validated by the official
+  `docker-compose-v5.5.1.exe` CLI using digest-pinned images; Docker Engine is
+  absent and the model has not been started.
+- Next implementation task after this checkpoint is M1.2: non-executing
+  content import from pinned `project.js`, validation of item/role/map references,
+  immutable content version publication and read-only legacy SQLite reconciliation.
