@@ -14,7 +14,8 @@ import pytest
 ROOT = Path(__file__).parents[2]
 HELPER_PATH = ROOT / "tools" / "apk-recovery" / "prepare-lab-bootstrap.py"
 PROJECT_SOURCE = ROOT / "client-recovered" / "src" / "project.js"
-APK_MANIFEST = ROOT / "work" / "apk-vn" / "20260914T180000Z" / "apktool" / "assets" / "project.manifest"
+# Synthetic schema fixture: these tests exercise rewriting, not APK provenance.
+APK_MANIFEST = Path(__file__).parent / "fixtures/bootstrap-manifest.json"
 
 
 def _helper_module():

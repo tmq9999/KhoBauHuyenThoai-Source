@@ -92,10 +92,13 @@ def test_encrypted_and_unsupported_method_flags_fail(idx):
     with pytest.raises(idx.IndexerError):
         idx.validate_zip(io.BytesIO(raw))
 
-def test_no_extraction_and_no_network_or_subprocess_source(idx):
-    before = {p.relative_to(ROOT).as_posix() for p in ROOT.rglob("*") if p.is_file()}
+def test_no_extraction_and_no_network_or_subprocess_source(idx, tmp_path, monkeypatch):
+    # Observe the validator's scratch area, not a live PostgreSQL cluster in work/.
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(idx, "__file__", str(tmp_path / "tools" / "reference-index.py"))
+    before = {p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*") if p.is_file()}
     idx.validate_zip(zipped([("a", b"x", zipfile.ZIP_DEFLATED)]))
-    after = {p.relative_to(ROOT).as_posix() for p in ROOT.rglob("*") if p.is_file()}
+    after = {p.relative_to(tmp_path).as_posix() for p in tmp_path.rglob("*") if p.is_file()}
     assert before == after
     source = ENTRY.read_text(encoding="utf-8")
     assert "import socket" not in source

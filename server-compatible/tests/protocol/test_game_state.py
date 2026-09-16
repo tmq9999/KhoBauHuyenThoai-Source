@@ -474,6 +474,7 @@ def test_existing_recruits_reconcile_absent_completion_markers_without_renewing_
         assert gem["point"] == {"isPayGemFirst": True, "nextGemFreeTime": 456}
         assert store.get_owned(uid, player["id"])["point"] == {
             "freeCoinTimes": 1, "isPayGemFirst": True,
+            "gemTimes": 0,
             "nextCoinFreeTime": 123, "nextGemFreeTime": 456, "other": 9,
         }
     finally:

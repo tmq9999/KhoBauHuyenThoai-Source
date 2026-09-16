@@ -17,6 +17,11 @@ assert spec.loader is not None
 spec.loader.exec_module(decode_jsc)
 
 
+@pytest.fixture(autouse=True)
+def isolated_decoder_files(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), "RUN_DIR", tmp_path)
+
+
 KEY = b"0123456789abcdef"
 # Independent standard Cocos XXTEA reference vector for b"hello world".
 VECTOR = bytes.fromhex("85412a951b720b6e74798bc055b4d6b0")

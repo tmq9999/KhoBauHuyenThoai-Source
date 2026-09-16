@@ -9,6 +9,26 @@ client versus 11 gameplay route literals handled by the runner. This is a
 surface inventory, not a percentage of working gameplay: even implemented
 routes are partial, and dynamic handshake/bootstrap calls need separate tracing.
 
+## M0 implementation evidence (2026-09-16)
+
+- [Generated inventory](vn-route-inventory.json): 230 unique RPC routes at 231
+  call sites (77 CORE, 150 EXPANSION, 3 DENIED_ADMIN_ONLY). This includes both
+  adjacent-variable bootstrap routes omitted by the earlier literal-only count.
+- [Reviewed consumer profiles](vn-core-consumers.json): 77 CORE route mappings,
+  direct callback reads plus shared merge/decompression contracts. Four routes
+  have no confirmed direct UI consumer and stay explicit unresolved profiles;
+  optional slot/catalog/chat metadata also needs concrete schema fixtures.
+- 14 nonliteral `.request` sites are listed separately, including generic
+  wrappers and HTTP calls. They are not invented RPC routes.
+- Re-run the pinned-source check without writing:
+
+```powershell
+python tools/protocol/route_inventory.py --source client-recovered/src/project.js --output docs/protocol/vn-route-inventory.json --check --consumers docs/protocol/vn-core-consumers.json
+```
+
+This is static evidence, not `SCHEMA_FIXTURE` or native gameplay acceptance.
+The numeric/UI snapshot defaults from M0.2 do not implement missing action routes.
+
 ## Findings, ordered by release risk
 
 | ID | Severity | Evidence / cause | Required correction / proof |

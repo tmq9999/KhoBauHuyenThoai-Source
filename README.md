@@ -1,87 +1,155 @@
-# Kho Báu Huyền Thoại — APK client recovery
+# Kho Báu Huyền Thoại Source
 
-Phát triển trực tiếp từ APK Việt Nam. Không có web/demo thay thế.
+Mã nguồn client Android phục hồi từ APK Kho Báu Huyền Thoại, server tương thích
+protocol native và package backend PostgreSQL. Client sử dụng JavaScript,
+Android glue, resources và thư viện native Cocos 1.10.3 từ APK gốc.
 
-## Xây dựng server online
+## Kiến trúc kỹ thuật
 
-Mục tiêu tiếp theo là game server online có database authoritative và admin
-panel. Hướng kiến trúc đã được Owner duyệt; **chưa triển khai hệ thống production**.
-Codex bắt đầu từ M0 trong các tài liệu sau:
+```text
+Native APK -> HTTP / Pomelo-WebSocket -> server-compatible -> SQLite
 
-- [Runbook triển khai bằng Codex](docs/superpowers/runbooks/2026-09-16-codex-online-game-server.md).
-- [Spec server, database, client và admin](docs/superpowers/specs/2026-09-16-online-game-server-design.md).
-- [Plan M0–M10](docs/superpowers/plans/2026-09-16-online-game-server.md).
-- [Review lỗi và route](docs/protocol/vn-online-route-matrix.md).
+CLI / Python commands -> server-online -> PostgreSQL
+                            |
+                            +-> command receipts / ledger / outbox
+```
 
-Mỗi commit bàn giao phải cập nhật README và [CHANGELOG](CHANGELOG.md) trong
-cùng commit; kiểm lại cả hai sau commit. Test server và kiểm chứng trên APK phải
-được báo riêng. Antigravity chưa dùng ở giai đoạn này; tài liệu recovery cũ giữ
-làm bằng chứng, không phải runbook triển khai online hiện hành.
+Hai backend có entry point và database riêng, không dual-write.
+`server-compatible` phục vụ kết nối APK; `server-online` cung cấp CLI và core
+transaction Python. Kiến trúc đích gồm native adapter, game services, worker,
+Redis và admin API/UI được mô tả trong
+[đặc tả online server](docs/superpowers/specs/2026-09-16-online-game-server-design.md).
 
-Repo GitHub: [tmq9999/KhoBauHuyenThoai-Source](https://github.com/tmq9999/KhoBauHuyenThoai-Source),
-đã xác minh **Private** ngày 2026-09-16. Nhánh source hiện tại:
-`feat/native-game-entry`; giữ nguyên lịch sử recovery. Đây là bản lưu source và
-kế hoạch, không phải release production. Không upload keystore, APK, database,
-backup hoặc logcat lên Git.
+## Cấu trúc repository
 
-## Source phục hồi
+| Thư mục | Trách nhiệm |
+| --- | --- |
+| `client-recovered/` | JavaScript/resources/glue phục hồi, script build và patch có kiểm soát |
+| `server-compatible/` | Runner SQLite phục vụ lab protocol và migration reference |
+| `server-online/` | Package server PostgreSQL, migrations, command contracts và integration tests |
+| `tools/protocol/` | Route inventory và kiểm tra provenance protocol |
+| `tools/apk-recovery/` | Decoder, staging, patch và repack APK |
+| `tools/ci/` | Kiểm tra delivery docs và các gate CI |
+| `tests/` | Test phục hồi APK, protocol, client patch và tooling |
+| `docs/protocol/` | Route matrix, consumer contract, inventory và wire evidence |
+| `docs/superpowers/specs/` | Đặc tả kiến trúc và ranh giới an toàn |
+| `docs/superpowers/plans/` | Kế hoạch triển khai theo milestone |
+| `docs/superpowers/runbooks/` | Quy trình vận hành dành cho Codex |
+| `docs/agent-runs/` | Nhật ký tiến độ, bằng chứng, blocker và quyết định theo phiên |
+| `docs/release/` | Báo cáo build/recovery và acceptance theo release |
 
-- [project.js](client-recovered/src/project.js): 6,039,275 bytes JavaScript giải từ project.jsc.
-- [settings.js](client-recovered/src/settings.js): scene/UUID/resource settings;37scene gồm36product +1test.
-- [jsb_polyfill.js](client-recovered/src/jsb_polyfill.js): engine runtime ghi1.10.3.
-- [Client build hướng dẫn](client-recovered/README.md).
+## Hợp đồng dữ liệu chính
 
-## Build lại APK
+Mutating command dùng các trường `command_id`, `account_id`, `player_id`,
+`server_id`, `route`, `expected_version`, `content_version_id` và `payload`.
+`CommandExecutor` khoá player, kiểm tra ownership/version/content, chạy handler
+và commit wallet, ledger, receipt, outbox trong cùng transaction. Retry nguyên
+command nhận lại kết quả đã lưu; cùng key nhưng envelope khác trả `CONFLICT`.
 
-~~~powershell
+- `wallets`: số dư nguyên `BIGINT`, khóa `(player_id, currency)`.
+- `ledger_transactions`, `ledger_postings`, `wallet_ledger`: bút toán theo
+  command và đối ứng issuance/sink theo currency.
+- `command_receipts`: khóa `(player_id, command_id)`, hash input và saved result.
+- `outbox_events`: event ghi cùng transaction với thay đổi domain.
+- `worker_receipts`: khóa `(consumer, event_id)`, ghi cùng transaction với xử
+  lý event để retry không áp dụng thay đổi lần hai.
+- `item_definitions`, `inventory_items`, `inventory_ledger`: định nghĩa theo
+  content version, stack theo chủ sở hữu và lịch sử số lượng bất biến.
+- `reward_grants`, `reward_items`, `reward_currencies`: cấp thưởng duy nhất theo
+  người chơi/loại nguồn/UUID nguồn; ghi cùng transaction với inventory và wallet.
+- `db/permissions.py`: cấp quyền rõ ràng cho role runtime không sở hữu schema;
+  migration và runtime sử dụng hai phạm vi quyền khác nhau.
+- Account/content/command/event dùng UUID; player dùng số nguyên an toàn cho JS.
+- Timestamp dùng `timestamptz`, kết nối PostgreSQL dùng UTC.
+
+Đặc tả đầy đủ nằm trong
+[online-game-server-design](docs/superpowers/specs/2026-09-16-online-game-server-design.md)
+và [client-server contract](docs/protocol/vn-client-server-contract.md).
+
+## Cài đặt môi trường
+
+- Windows với PowerShell.
+- Python `3.12.x` cho tooling và compatibility runner.
+- Python virtual environment `server-online/.venv` cho online server.
+- Android SDK/platform-tools nếu kiểm tra APK trên MuMu lab.
+- PostgreSQL 18 cho backend online; lab mặc định `127.0.0.1:25432`.
+- Node.js cho test JavaScript; JDK/Android build-tools cho repack/sign APK.
+
+Từ repository root, tạo virtual environment và cài package:
+
+```powershell
+python -m venv server-online/.venv
+& '.\server-online\.venv\Scripts\python.exe' -I -m pip install --require-hashes -r server-online/requirements.lock
+& '.\server-online\.venv\Scripts\python.exe' -I -m pip install --no-deps --editable ./server-online
+```
+
+Lockfile dành cho Windows x64/Python 3.12. Backend đọc biến môi trường của
+process; cấu hình và cách chạy PostgreSQL ở [server-online/README](server-online/README.md).
+
+## Migration và kiểm tra database
+
+Các lệnh dưới đây chạy từ repository root. `KBHT_DB_PASSWORD_FILE` trỏ tới file
+secret local đã được cấp quyền riêng; không đưa password vào command line.
+
+```powershell
+$env:KBHT_DB_PASSWORD_FILE = (Resolve-Path 'work/m1-env/secrets/postgres-superuser.txt').Path
+& '.\server-online\.venv\Scripts\python.exe' -I -m kbht_server.cli migrate --environment development
+& '.\server-online\.venv\Scripts\python.exe' -I -m kbht_server.cli check-invariants --environment development
+& '.\server-online\.venv\Scripts\python.exe' -I -m pytest -q server-online/tests -p no:cacheprovider
+Remove-Item Env:KBHT_DB_PASSWORD_FILE
+```
+
+Portable PostgreSQL lab dùng database `kbht_dev`/`kbht_test` trên loopback port
+`25432`. Chi tiết start/stop, package install, migration và test contract ở
+[server-online/README](server-online/README.md). Migrations không được chạy vào
+SQLite compatibility database.
+
+## Chạy compatibility runner và APK lab
+
+Runner nhận manifest cùng bản APK và đường dẫn SQLite lưu tài khoản/nhân vật:
+
+```powershell
+python -u server-compatible/src/game_server.py --manifest "$env:KBHT_LAB_MANIFEST" --state "$env:KBHT_LAB_STATE"
+```
+
+Đặt `KBHT_LAB_MANIFEST` và `KBHT_LAB_STATE` theo cấu hình lab trong
+[hướng dẫn runner](server-compatible/README.md). Session ở RAM, nên sau restart
+runner cần đăng nhập lại. Các cổng loopback: `20001` static/config, `20003` auth,
+`20100` gate, `20101` connector.
+
+Build/repack APK từ source phục hồi (cần input APK/baseline cục bộ):
+
+```powershell
+pwsh -NoProfile -File client-recovered/scripts/build-repacked.ps1 -ValidateOnly
 pwsh -NoProfile -File client-recovered/scripts/build-repacked.ps1 -LabBootstrap -LabLocalAuth -Sign
-~~~
+```
 
-Script kiểm hash APK/native/tool, encode source về JSC, stage và đóng gói/ký bằng key lab riêng. Không cài hoặc chạy APK. Native .so vẫn là prebuilt, chưa phải project Cocos editor/C++ hoàn chỉnh.
+Builder tạo artifact và manifest trong `work/apk-vn/<run>/`; không cài ứng dụng.
+Tuỳ chọn `-PowerDisplay` đi cùng hai cờ lab để patch formatter lực chiến.
+Xem [hướng dẫn client](client-recovered/README.md) về signing và
+[hướng dẫn runner](server-compatible/README.md) về ADB reverse trên MuMu.
 
-Thêm `-CreateDebugKeystore` chỉ khi key lab trong project chưa tồn tại. Bản
-không có `-LabBootstrap -LabLocalAuth` giữ endpoint gốc, không dùng để chạy lab.
+## Kiểm tra tooling và protocol
 
-[APK lab cài lại ngày 2026-09-16](work/apk-vn/20260915T112626Z-repack-first-map-runtime/artifacts/vn-recovered-debug-signed.apk) · [Báo cáo build](work/apk-vn/20260915T112626Z-repack-first-map-runtime/repack-build-report.md)
-
-SHA-256: `f5564e5c375266ec41258d3dc4729c6ce2550cc420f2548ff537b6798a042156`.
-Artifact trong `work/` chỉ có local, không có trong checkout mới từ GitHub.
-
-## Chạy client/server hiện tại
-
-[Lệnh chạy server và nối emulator-5554](server-compatible/README.md). Runner là
-`server-compatible/src/game_server.py`, dùng SQLite lưu tài khoản/nhân vật;
-không chạy `probe_server.py` để chơi.
-
-Client phục hồi đã vào home/đội hình trên MuMu `emulator-5554`. Code lab hiện có
-SMAP 10101–10106, chiêu mộ tutorial, một phần inventory/EXP/điểm danh/tiến bậc xanh.
-Owner vẫn xác nhận lỗi lực chiến số lẻ, qua map, chiêu mộ thật, nâng cấp trang bị,
-bạn bè, daily task và mua Beli. Database PostgreSQL, combat authoritative và
-admin panel **chưa tồn tại**. Không gọi kết quả này là game online hoàn chỉnh.
-
-Runner hiện có, giữ đúng state cũ và manifest cùng APK (không bật hai instance):
-
-~~~powershell
-python -u server-compatible/src/game_server.py --manifest work/apk-vn/20260915T112626Z-repack-first-map-runtime/lab-bootstrap/project.manifest --state work/apk-vn/20260915T001024Z-game-entry/runtime/game-playable3.sqlite3
-~~~
-
-Sau restart server phải đăng nhập lại vì token lab ở RAM. Không xoá DB/app data
-để xử lý lỗi. Backup trước khi migrate; chỉ nhập vào DB đích mới.
-
-## Kiểm tra
-
-~~~powershell
+```powershell
 python -m pytest -q tests server-compatible/tests/protocol -p no:cacheprovider
-git diff --check
-~~~
+node --test tests/client/test_power_display.mjs
+python tools/protocol/route_inventory.py --source client-recovered/src/project.js --output docs/protocol/vn-route-inventory.json --check --consumers docs/protocol/vn-core-consumers.json
+python tools/ci/check_delivery_docs.py --base "$env:KBHT_DOCS_BASE" --head HEAD
+```
 
-Không chạy `pytest` không chỉ định thư mục: `work/` chứa bản sao test lịch sử.
-Kiểm lại ngày 2026-09-16: 215 passed, 3 skipped; không phải bằng chứng mọi chức
-năng client hoạt động. Bản source này gồm feature slice lab và tài liệu Codex;
-việc lưu lên GitHub không bổ sung hay xác minh gameplay mới.
+Chỉ định thư mục test để loại artifact/runtime trong `work/` khỏi discovery.
+`KBHT_DOCS_BASE` là commit mốc cần kiểm. Test online dùng PostgreSQL `kbht_test`
+và tạo schema riêng cho mỗi test; không dùng database SQLite của runner.
 
-[Contract và phạm vi đã kiểm](docs/protocol/vn-client-server-contract.md).
-Giữ firewall chặn provider/payment và dùng đúng lab đã được chọn; không cài
-lên thiết bị thật. Sau restart emulator cần tạo lại bốn ADB reverse mappings.
+## Tài liệu dự án
 
-[Mốc recovery](docs/release/2026-09-14-native-recovery-milestone.md) · [Plan recovery lịch sử](docs/superpowers/plans/2026-09-14-vn-apk-client-reconstruction.md)
+- [Online server specification](docs/superpowers/specs/2026-09-16-online-game-server-design.md)
+- [Codex implementation plan](docs/superpowers/plans/2026-09-16-online-game-server.md)
+- [Codex runbook](docs/superpowers/runbooks/2026-09-16-codex-online-game-server.md)
+- [Route and defect matrix](docs/protocol/vn-online-route-matrix.md)
+- [Protocol contract](docs/protocol/vn-client-server-contract.md)
+- [Online-server progress log](docs/agent-runs/online-server-progress.md)
+- [Native client build guide](client-recovered/README.md)
+- [Compatibility runner guide](server-compatible/README.md)
+- [Change history](CHANGELOG.md)

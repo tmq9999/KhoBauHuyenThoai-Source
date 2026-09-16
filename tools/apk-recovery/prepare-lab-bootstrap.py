@@ -30,6 +30,21 @@ LAB_ASSIGNMENTS = "\n".join(
 # not search/replace arbitrary endpoint-looking strings elsewhere in project.js.
 BUILD_EXT_ASSIGNMENTS = re.compile(re.escape(ORIGINAL_ASSIGNMENTS))
 PINNED_PROJECT_SHA256 = "9776b6e20978d5d911bc0abb85830820bac5a3bfb8db4e65a617c5d18646a818"
+POWER_DISPLAY_PATCH = Path(__file__).resolve().parents[2] / "client-recovered/patches/power-display.js"
+POWER_DISPLAY_PINS = (
+    ("this.powerLabel.string = n.power;", 2, "this.powerLabel.string = window.kbhtPowerDisplay.formatPower(n.power);"),
+    ("this.powerLabel.string = e.power;", 3, "this.powerLabel.string = window.kbhtPowerDisplay.formatPower(e.power);"),
+    ("this.powerLabel.string = t.totalPower;", 2, "this.powerLabel.string = window.kbhtPowerDisplay.formatPower(t.totalPower);"),
+    ("this.powerLabel.string = e.totalPower;", 1, 'this.powerLabel.string = window.kbhtPowerDisplay.formatRankValue(e.totalPower, "totalPower");'),
+    ('i.getChildByName("power_label").getComponent(cc.Label).string = o;', 1,
+     'i.getChildByName("power_label").getComponent(cc.Label).string = window.kbhtPowerDisplay.formatPower(o);'),
+    ('a.getChildByName("power_label").getComponent(cc.Label).string = t[l].totalPower;', 1,
+     'a.getChildByName("power_label").getComponent(cc.Label).string = window.kbhtPowerDisplay.formatPower(t[l].totalPower);'),
+    ('this.myValueLabel.string = "" != this.myTitleLabel.string ? e.myValue : "";', 1,
+     'this.myValueLabel.string = "" != this.myTitleLabel.string ? window.kbhtPowerDisplay.formatRankValue(e.myValue, e.typeInfo.type) : "";'),
+    ('s.getChildByName("value_label").getComponent(cc.Label).getComponent(cc.Label).string = "" != m.string ? r.value : "";', 1,
+     's.getChildByName("value_label").getComponent(cc.Label).getComponent(cc.Label).string = "" != m.string ? window.kbhtPowerDisplay.formatRankValue(r.value, e.typeInfo.type) : "";'),
+)
 SDK_INIT_ANDROID_CALL = 'cc.sys.os == cc.sys.OS_ANDROID ? jsb.reflection.callStaticMethod("org/cocos2dx/javascript/SDKAdapter", "initPackageInfo", "()V") : cc.sys.os == cc.sys.OS_IOS && jsb.reflection.callStaticMethod("SDKAdapter", "initPackageInfo");'
 SDK_INIT_ANDROID_LOCAL_CALL = 'if (cc.sys.os == cc.sys.OS_ANDROID) {\nd.sdkName = "mmx";\nd.channel = "Android";\n} else if (cc.sys.os == cc.sys.OS_IOS) {\njsb.reflection.callStaticMethod("SDKAdapter", "initPackageInfo");\n}'
 LOCAL_AUTH_LOG_CALLS = (("console.log(t);", ""), ("console.log(e + \" \" + JSON.stringify(t));", ""))
@@ -102,6 +117,32 @@ def patch_local_auth_staged_source(staged_path: Path, reference_path: Path) -> s
     return hashlib.sha256(transformed.encode("utf-8")).hexdigest()
 
 
+def apply_power_display_transform(source: str) -> str:
+    """Patch known UI reads only; computed numeric stats and pinned input stay intact."""
+    if "window.kbhtPowerDisplay" in source:
+        raise ValueError("power display patch already applied")
+    for original, count, replacement in POWER_DISPLAY_PINS:
+        if source.count(original) != count:
+            raise ValueError("power display pin count mismatch")
+        source = source.replace(original, replacement)
+    patch = POWER_DISPLAY_PATCH.read_bytes().decode("utf-8")
+    return patch + "\n" + source
+
+
+def patch_power_display_staged_source(staged_path: Path, reference_path: Path) -> str:
+    if staged_path.resolve() == reference_path.resolve() or staged_path.samefile(reference_path):
+        raise ValueError("staged source and reference must not be the same file")
+    if _sha256(reference_path) != PINNED_PROJECT_SHA256:
+        raise ValueError("reference source does not match pinned original")
+    original = reference_path.read_bytes().decode("utf-8")
+    expected = apply_local_auth_transform(remap_build_ext_text(original))
+    if staged_path.read_bytes() != expected.encode("utf-8"):
+        raise ValueError("staged source does not match expected local-auth source")
+    transformed = apply_power_display_transform(expected).encode("utf-8")
+    staged_path.write_bytes(transformed)
+    return hashlib.sha256(transformed).hexdigest()
+
+
 def _manifest_payload(path: Path) -> dict[str, Any]:
     if path.is_symlink():
         raise ValueError("manifest must not be a symlink")
@@ -156,6 +197,9 @@ def main() -> int:
     local = subparsers.add_parser("patch-local-auth")
     local.add_argument("--input", type=Path, required=True)
     local.add_argument("--reference", type=Path, required=True)
+    power = subparsers.add_parser("patch-power-display")
+    power.add_argument("--input", type=Path, required=True)
+    power.add_argument("--reference", type=Path, required=True)
     rewrite = subparsers.add_parser("rewrite-manifest")
     rewrite.add_argument("--manifest", type=Path, required=True)
     rewrite.add_argument("--encoded-dir", type=Path, required=True)
@@ -166,6 +210,9 @@ def main() -> int:
             print(f"source_sha256={remap_staged_source(args.input, args.reference)}")
         elif args.command == "patch-local-auth":
             print(f"source_sha256={patch_local_auth_staged_source(args.input, args.reference)}")
+        elif args.command == "patch-power-display":
+            print(f"source_sha256={patch_power_display_staged_source(args.input, args.reference)}")
+            print(f"patch_sha256={_sha256(POWER_DISPLAY_PATCH)}")
         else:
             print(f"manifest_sha256={rewrite_manifest(args.manifest, args.encoded_dir, args.output)}")
     except (OSError, UnicodeError, ValueError) as exc:

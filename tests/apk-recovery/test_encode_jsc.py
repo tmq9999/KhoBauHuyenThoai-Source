@@ -22,6 +22,11 @@ def load_module(name, path):
 encode_jsc = load_module("encode_jsc", ENCODER_PATH)
 decode_jsc = load_module("decode_jsc", DECODER_PATH)
 
+
+@pytest.fixture(autouse=True)
+def isolated_encoder_files(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), "RUN_DIR", tmp_path)
+
 KEY = b"0123456789abcdef"
 VECTOR = bytes.fromhex("85412a951b720b6e74798bc055b4d6b0")
 

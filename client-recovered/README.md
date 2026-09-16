@@ -42,3 +42,9 @@ The installed artifact verified on 2026-09-16 is the
 `20260915T112626Z-repack-first-map-runtime` run (SHA-256
 `f5564e5c375266ec41258d3dc4729c6ce2550cc420f2548ff537b6798a042156`);
 server-only handler changes do not require rebuilding or reinstalling it.
+
+The M0 display-only patch is opt-in with `-PowerDisplay` together with both lab
+flags. It formats power labels without changing combat values or pinned source.
+The signed run `work/apk-vn/20260915T212249Z-repack` has been built and its JSC /
+manifest payloads verified, but it has not been installed or native-smoke-tested.
+Use that run's manifest when testing it; keep the installed artifact separate.

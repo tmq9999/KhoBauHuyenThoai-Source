@@ -153,8 +153,10 @@ For each task in the plan:
 6. Perform native smoke when the matching release is ready and lab authority
    is confirmed. A feature awaiting native smoke is `IMPLEMENTED_NOT_VERIFIED`,
    not done. Do not repair test data with grants just to make gameplay pass.
-7. Update plan task status, README current capabilities/limits/run commands and
-   CHANGELOG changed/fixed/known issues **before** committing them together.
+7. Update plan task status and the progress log. Update README technical
+   structure/contracts/configuration/usage and CHANGELOG release changes
+   **before** committing them together. Session status, test counts, rules and
+   temporary blockers belong in the run/progress documents, not README.
 8. After commit verify files/sha; record commit SHA in the next progress entry
    (a commit cannot contain its own SHA). Push only if private remote is verified.
 
@@ -292,7 +294,9 @@ safe work and record the precise gate. Do not call it a production game early.
 ## 9. Commit and documentation contract
 
 Every deliverable commit includes `README.md` and `CHANGELOG.md`. README explains
-what actually runs, current limits, exact verified commands and next milestone.
+technical structure, contracts, configuration and exact usage commands. It is
+not a milestone dashboard, agent instruction file or execution journal.
+Next tasks, test-run evidence and blockers go in the plan/progress log.
 CHANGELOG records user-visible changes, migrations/compatibility and known issues
 under an accurate date/Unreleased entry. Historical tests retain their dates;
 fresh verification is identified separately.

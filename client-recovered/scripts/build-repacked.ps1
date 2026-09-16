@@ -3,6 +3,7 @@ param(
     [switch]$ValidateOnly,
     [switch]$LabBootstrap,
     [switch]$LabLocalAuth,
+    [switch]$PowerDisplay,
     [switch]$Sign,
     [switch]$CreateDebugKeystore,
     [string]$KeystorePath,
@@ -12,6 +13,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 if ($LabLocalAuth -and -not $LabBootstrap) { throw '-LabLocalAuth requires -LabBootstrap' }
+if ($PowerDisplay -and -not ($LabBootstrap -and $LabLocalAuth)) { throw '-PowerDisplay requires -LabBootstrap -LabLocalAuth' }
 $clientRoot = Split-Path -Parent $PSScriptRoot
 $root = Split-Path -Parent $clientRoot
 $ledgerPath = Join-Path $clientRoot 'recovery-ledger.json'
@@ -101,6 +103,13 @@ try {
             }
             $report.Add('- Lab local-auth SDK-init transform: enabled (Android uses local mmx/Android fields; native Gosu bridge call is skipped).')
             $report.Add("- Lab local-auth staged project SHA-256: $((Get-FileHash -LiteralPath (Join-Path $sourceStage 'project.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+            if ($PowerDisplay) {
+                Invoke-Recorded 'python tools/apk-recovery/prepare-lab-bootstrap.py patch-power-display <staged-project> --reference <pinned-project>' {
+                    & python $labBootstrapHelper patch-power-display --input (Join-Path $sourceStage 'project.js') --reference (Join-Path $sourceRoot 'project.js')
+                }
+                $report.Add("- Power-display patch SHA-256: $((Get-FileHash -LiteralPath (Join-Path $clientRoot 'patches/power-display.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                $report.Add("- Power-display staged project SHA-256: $((Get-FileHash -LiteralPath (Join-Path $sourceStage 'project.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+            }
         }
         $sourceForBuild = $sourceStage
     }

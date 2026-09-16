@@ -124,6 +124,10 @@ the behavior being tested, reject the test during review.
 
 ### Task M0.1: route inventory with source provenance
 
+Execution status: extractor/CLI/generated manifest verified locally; consumer
+profiles cover 77 CORE routes but four direct consumers and optional nested
+schemas remain `BLOCKED_EVIDENCE`. See `docs/agent-runs/online-server-progress.md`.
+
 **Create:** `tools/protocol/route_inventory.py`,
 `tests/protocol/test_route_inventory.py`,
 `docs/protocol/vn-route-inventory.json`,
@@ -133,7 +137,7 @@ the behavior being tested, reject the test during review.
 `sourceLine`, `status`. Request/response schemas are recovered separately; a
 regex occurrence is not a schema.
 
-- [ ] Write literal tests, then run RED:
+- [x] Write literal tests, then run RED:
 
 ```python
 from tools.protocol.route_inventory import inventory
@@ -166,17 +170,24 @@ def inventory(source: str) -> list[dict]:
     ]
 ```
 
-- [ ] Add CLI `--source`, `--output`, `--check`. Resolve paths, hash input, emit
+- [x] Add CLI `--source`, `--output`, `--check`. Resolve paths, hash input, emit
   sorted JSON with duplicate call sites retained; refuse output overwrite unless
   identical or explicitly updating that generated manifest. Check mode compares
   without writing. Generated artifact includes source SHA and extraction format.
 - [ ] Run against pinned project.js; compare request sites with `rg` output and
   record CORE/EXPANSION/DENIED_ADMIN_ONLY classifications. Fill complete callback
   read-sets for all CORE groups from the route matrix, citing line/hash.
+  Inventory/classification and reviewed direct-read profiles are present;
+  full schema promotion remains pending for the four explicit unresolved routes.
 - [ ] Verify using both sample tests and `--check`; every generated route has
   at least one source line. Update README/CHANGELOG and commit explicit paths.
 
 ### Task M0.2: regressions for power/defaults and docs policy
+
+Execution status: `IMPLEMENTED_NOT_VERIFIED` for native display. Authored
+formatter, exact staged pins, real snapshot default migration and docs checker
+have local tests; signed APK build succeeded without install/launch. CI definition
+is present but no hosted Actions run is claimed.
 
 **Create:** `client-recovered/patches/power-display.js`,
 `tests/client/test_power_display.mjs`,
@@ -188,7 +199,7 @@ README.md, CHANGELOG.md. Do not change immutable project.js.
 **Interfaces:** pure `formatPower(value) -> string`; CI `--base <sha> --head <sha>`
 checks both docs for each non-merge deliverable commit after the new baseline.
 
-- [ ] Write and observe RED for fractional sums, all four label call sites and
+- [x] Write and observe RED for fractional sums, all four label call sites and
   missing snapshot counters. Native reference screenshot belongs in a private
   evidence run; store only a redacted fixture in Git.
 
@@ -210,10 +221,10 @@ export function formatPower(value) {
 }
 ```
 
-- [ ] Test docs checker in temporary Git repos: code+README+CHANGELOG passes;
+- [x] Test docs checker in temporary Git repos: code+README+CHANGELOG passes;
   either doc absent fails; initial historical base excluded; merge commit handled;
   empty range passes; invalid SHA fails. Never inspect only working-tree docs.
-- [ ] Implement per-commit name set check from Git diff-tree; reject missing
+- [x] Implement per-commit name set check from Git diff-tree; reject missing
   `{"README.md", "CHANGELOG.md"}`. Test the script with no network and no live repo
   mutations. CI runs scoped pytest/node checks and this script with full history.
 - [ ] Verify patch counts/hashes, `node --check`, fixture tests and native labels
@@ -223,23 +234,43 @@ export function formatPower(value) {
 
 ### Task M1.1: installable core, content schema and command ledger
 
+Current execution status: PostgreSQL 18.6 portable cluster, isolated Python
+environment, hash lock, frozen Alembic core revision, command receipts, ledger,
+outbox writes and migration CLI have local PostgreSQL test evidence. M1.1 remains
+IN_PROGRESS: runtime operational provisioning, polling/backoff, Compose/Redis
+reproducibility and delivery review remain. A least-privilege runtime grant
+function, process-loss-before/after-commit tests and a schema dump/restore drill
+have local evidence. Inventory/rewards and two-player wallet/command fixtures
+have real-PostgreSQL test evidence, including source dedup across command IDs,
+stack ownership, concurrency and rollback. Explicit-delivery outbox
+consumption/dedup have PostgreSQL evidence; polling/backoff and real task rules
+are separate remaining work.
+Content import, auth, native adapter and gameplay routes also remain open.
+
+Environment preparation: local Python 3.12.9 venv created and isolation checked.
+PostgreSQL and dependency downloads completed after the initial approval block;
+the checklist below remains open for content import and the rest of M1. See the
+progress log for exact setup evidence.
+
 **Create:** `server-online/pyproject.toml`, lockfile,
 `server-online/src/kbht_server/{__init__,contracts,cli}.py`,
 `server-online/src/kbht_server/db/{session,uow,repositories}.py`,
-`server-online/alembic/versions/0001_core.py`, `compose.yaml`, `.env.example`,
+`server-online/src/kbht_server/db/alembic/versions/0001_core.py`, `compose.yaml`, `.env.example`,
 `server-online/tests/conftest.py`, `server-online/tests/integration/test_ledger.py`.
 **Interfaces:** GameCommand/CommandResult/DomainFailure above;
 `execute(command)`; `UnitOfWork` context with receipts/wallets/items/events.
 
-- [ ] Verify current official dependency docs, pin versions and install with
+- [x] Verify current official dependency docs, pin versions and install with
   approval. Create development/test DSNs with no production default. Tests refuse
   destructive DB setup unless the database name is `kbht_test`.
-- [ ] Implement real `pg_lab` fixture: isolated schema per test, creates two
+- [x] Implement real `pg_lab` fixture: isolated schema per test, creates two
   accounts/players and published minimal content, rolls back/drops only that
   schema, returns `execute`, `wallet`, `items`, `receipt`, `events` helpers.
   Fixture player IDs 10001/10002, not production users. Seed initial balances
   via opening ledger transactions, never SQL wallet-only updates.
-- [ ] Write failing balance/retry tests before mutation services. This first
+  Two-account setup and execute/wallet/items/ledger/receipt/events helpers are
+  implemented; the fixture imports synthetic definitions only, not gameplay loot.
+- [x] Write failing balance/retry tests before mutation services. This first
   route is an internal test command, not an exposed GM player endpoint:
 
 ```python
@@ -257,6 +288,9 @@ def test_receipt_replay_cannot_debit_twice(pg_lab):
 - [ ] Implement spec physical keys/checks/FKs/indexes in 0001_core, fixed-point
   balances, append-only ledger role, transaction receipts and outbox. Use player
   row lock/version plus unique command key, no Redis-only money lock.
+  Shared wallet/inventory/reward/receipt constraints and runtime column grants
+  exist in additive revisions through 0005. Full content/gameplay fields and
+  operational role provisioning remain; do not rewrite applied 0001.
 
 Atomic debit reference, parameterized in repository code:
 
@@ -274,9 +308,14 @@ commit this statement independently of the grant.
 - [ ] Run real DB tests: 20 concurrent spends cannot exceed balance; same key
   different payload conflicts; disconnect before/after commit; ledger failure
   rolls back all rows; worker duplicate does not duplicate task progress.
+  Wallet contention and worker receipt/projection dedup are service-tested;
+  abrupt process loss and isolated schema restore are also tested. Actual task
+  projection belongs to M7; these counters do not complete daily gameplay.
 - [ ] Add CLI `migrate`, `check-invariants` with explicit environment; verify
   fresh install and restore. Run `python -m pytest -q server-online/tests/integration/test_ledger.py`.
   Update README/CHANGELOG and commit the independently usable foundation.
+  CLI, fresh schema, source upgrade and synthetic restore have evidence; release
+  integration/review/commit remains open.
 
 ### Task M1.2: content import and legacy migration rehearsal
 
@@ -610,5 +649,10 @@ new decision, not routine method naming. Helpers shown (`pg_lab`, `admin_lab`,
 `payment_lab`) are implemented in the matching test fixture task and never added
 to production as test-only methods. Code is written test-first during execution.
 
-Next execution: **M0.1**. All implementation checkboxes remain uncompleted.
-This handoff creates documents; it does not mark the online server implemented.
+Next execution: finish remaining M0 consumer/schema evidence and native M0.2
+smoke; finish M1.1 operational role provisioning, polling/backoff and delivery
+checks before M1.2 content import/legacy migration. Runtime grant and synthetic
+restore/disconnect tests are recorded in the progress log. Implemented tooling
+does not mark M0 or the online server
+complete. Remote push is paused for the historical SDK secret-shaped literals
+found in pinned source; no source history is rewritten.

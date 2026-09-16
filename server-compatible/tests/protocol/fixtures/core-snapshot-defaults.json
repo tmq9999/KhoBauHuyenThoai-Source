@@ -1,0 +1,13 @@
+{
+  "sourceSha256": "9776b6e20978d5d911bc0abb85830820bac5a3bfb8db4e65a617c5d18646a818",
+  "provenance": "Client reads at project.js:16133,17126,53430,40349,22017; zero means no completed action, not proof that the action route is implemented.",
+  "vip": {
+    "buyCoinTimes": 0,
+    "buyActionPointTimes": 0,
+    "buySkillPointTimes": 0,
+    "buyMapType5Times": 0,
+    "resetSmapTimesTimesMap": {}
+  },
+  "point": {"gemTimes": 0},
+  "friend": {"actionPointReceiveTimes": 0}
+}

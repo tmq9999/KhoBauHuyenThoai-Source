@@ -1,0 +1,3511 @@
+{
+  "dynamicRequests": [
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 25667
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 26248
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 31368
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 31512
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 47698
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 47773
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 51719
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 51726
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 51732
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 51907
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 53994
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 60220
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 60237
+    },
+    {
+      "reason": "NON_LITERAL_ROUTE",
+      "sourceLine": 60245
+    }
+  ],
+  "extraction": "lexical requests plus adjacent standalone literal declarations; no JS execution",
+  "formatVersion": 1,
+  "generator": "kbht-vn-route-inventory",
+  "limitations": [
+    "Object keys are not types or response schemas.",
+    "Dynamic requests remain unresolved; templates are treated as opaque.",
+    "Tier is delivery scope, never runtime verification."
+  ],
+  "routes": [
+    {
+      "route": "connector.entryHandler.entry",
+      "sites": [
+        {
+          "declarationLine": 53980,
+          "requestKeys": [
+            "token",
+            "serverId",
+            "oldServerId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "ADJACENT_LITERAL",
+          "sourceLine": 53981,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "connector.playerHandler.createPlayer",
+      "sites": [
+        {
+          "requestKeys": [
+            "name"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39877,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "connector.playerHandler.entry",
+      "sites": [
+        {
+          "requestKeys": [
+            "playerId",
+            "isReconnect"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39884,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "connector.playerHandler.getPlayers",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39872,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "gate.gateHandler.queryEntry",
+      "sites": [
+        {
+          "declarationLine": 53958,
+          "requestKeys": [
+            "uid"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "ADJACENT_LITERAL",
+          "sourceLine": 53959,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.allServerBattleHandler.apply",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2462,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.applyRank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2467,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.beginBattle",
+      "sites": [
+        {
+          "requestKeys": [
+            "toTowerNo"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2497,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.endBattle",
+      "sites": [
+        {
+          "requestKeys": [
+            "hpMap",
+            "targetHpMap",
+            "isWin",
+            "seed",
+            "bgImgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2504,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.endTopRankInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2537,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.enter",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndexs",
+            "shipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2472,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.exit",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2480,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.getReport",
+      "sites": [
+        {
+          "requestKeys": [
+            "reportId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2515,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.getTeam",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2492,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.move",
+      "sites": [
+        {
+          "requestKeys": [
+            "toTowerNo"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2485,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.openInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2457,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.receiveAward",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2527,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.recover",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2522,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.winTimesRank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2532,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.worshipRank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2549,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.allServerBattleHandler.worshipStatue",
+      "sites": [
+        {
+          "requestKeys": [
+            "levelType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 2542,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.buyChallengeTimes",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3368,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.cancelCD",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3363,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexsMap",
+            "attackShipIndexsMap",
+            "isWin",
+            "winPlayerIdMap",
+            "seed",
+            "bgImgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3389,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexsMap",
+            "attackShipIndexsMap"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3380,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.defenseTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "playerId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3373,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.info",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3345,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.match",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3350,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.receive",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3407,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.reportList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3402,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.setDefenseTeamIndexsMap",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenseTeamIndexsMap",
+            "defenseShipIndexsMap"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3355,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.top50",
+      "sites": [
+        {
+          "requestKeys": [
+            "levelType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3419,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.worshipRank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3426,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arena3v3Handler.worshipStatue",
+      "sites": [
+        {
+          "requestKeys": [
+            "levelType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3412,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.buyChallengeTimes",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3958,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.cancelCD",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3953,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexs",
+            "attackShipIndexs",
+            "isWin",
+            "seed",
+            "bgImgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3980,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexs",
+            "attackShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3971,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.defenseTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "playerId",
+            "isShow"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3963,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.info",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3935,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.match",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3940,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.report",
+      "sites": [
+        {
+          "requestKeys": [
+            "id"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3997,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.reportList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3992,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.arenaHandler.setDefenseTeamIndexs",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenseTeamIndexs",
+            "defenseShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 3945,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.addShipExperience",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex",
+            "experience"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5429,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.composeArtifact",
+      "sites": [
+        {
+          "requestKeys": [
+            "fragmentId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5401,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.composeItem",
+      "sites": [
+        {
+          "requestKeys": [
+            "kindId",
+            "isAll"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5393,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.bagHandler.composeRole",
+      "sites": [
+        {
+          "requestKeys": [
+            "classId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5386,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.bagHandler.composeShip",
+      "sites": [
+        {
+          "requestKeys": [
+            "fragmentId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5422,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.increaseArtifactUpgradeStarSuccessRate",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5415,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.sell",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndexs",
+            "itemCounts"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5378,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.bagHandler.upgradeShip",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5437,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.upgradeShipSkill",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5451,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.upgradeShipStar",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5444,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.bagHandler.upgradeStarArtifact",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 5408,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.endlessHandler.pass",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 19071,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.endlessHandler.skip",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 19076,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.expeditionHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "selfHpMap",
+            "selfMpMap",
+            "challengerHpMap",
+            "challengerMpMap",
+            "isWin"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20398,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.expeditionHandler.receive",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20409,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.expeditionHandler.reset",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20388,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.expeditionHandler.skip",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20393,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.buyChallengeTimes",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20565,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "rank",
+            "teamIndexs",
+            "shipIndexs",
+            "defenderId",
+            "isWin",
+            "seed",
+            "bgImgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20577,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "rank",
+            "teamIndexs",
+            "shipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20556,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.defenseTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "playerId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20570,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.info",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20551,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.report",
+      "sites": [
+        {
+          "requestKeys": [
+            "id"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20597,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.eyeHandler.startPrivate",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 20590,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.friendHandler.acceptAddFriend",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21699,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.findTarget",
+      "sites": [
+        {
+          "requestKeys": [
+            "content"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21685,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.giveGift",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21713,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.giveGiftAll",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21727,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.myFriendList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21670,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.receiveGift",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21720,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.receiveGiftAll",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21732,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.recommendList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21675,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.refuseAddFriend",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21706,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.removeFriend",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21737,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.requestAddFriend",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21692,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.friendHandler.requestAddFriendList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 21680,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.gmHandler.addItem",
+      "sites": [
+        {
+          "requestKeys": [
+            "kindId",
+            "itemCount"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 22062,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "DENIED_ADMIN_ONLY"
+    },
+    {
+      "route": "logic.gmHandler.addRole",
+      "sites": [
+        {
+          "requestKeys": [
+            "kindId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 22070,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "DENIED_ADMIN_ONLY"
+    },
+    {
+      "route": "logic.gmHandler.removeRole",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 22077,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "DENIED_ADMIN_ONLY"
+    },
+    {
+      "route": "logic.guildBattleHandler.beginBattle",
+      "sites": [
+        {
+          "requestKeys": [
+            "toTowerNo"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23880,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.endBattle",
+      "sites": [
+        {
+          "requestKeys": [
+            "hpMap",
+            "targetHpMap",
+            "isWin",
+            "seed",
+            "bgImgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23887,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.enter",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndexs",
+            "shipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23855,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.exit",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23863,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.getReport",
+      "sites": [
+        {
+          "requestKeys": [
+            "reportId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23898,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.getTeam",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23875,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.move",
+      "sites": [
+        {
+          "requestKeys": [
+            "toTowerNo"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23868,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.openInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23850,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.receiveAward",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23910,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildBattleHandler.recover",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 23905,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.addViceChairman",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId",
+            "targetName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24587,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.applyJoin",
+      "sites": [
+        {
+          "requestKeys": [
+            "guildId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24532,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.changeChairman",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId",
+            "targetName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24603,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.create",
+      "sites": [
+        {
+          "requestKeys": [
+            "name",
+            "badgeId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24519,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.dismiss",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24582,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.drum",
+      "sites": [
+        {
+          "requestKeys": [
+            "type"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24624,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.exit",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId",
+            "targetName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24611,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.handleApply",
+      "sites": [
+        {
+          "requestKeys": [
+            "isAgree",
+            "targetId",
+            "targetName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24561,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.info",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24514,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.inherit",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24577,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.list",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24527,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.modifyNotice",
+      "sites": [
+        {
+          "requestKeys": [
+            "notice"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24570,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.modifySetting",
+      "sites": [
+        {
+          "requestKeys": [
+            "badgeId",
+            "joinRequireType",
+            "joinLevelLimit"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24552,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.openBox",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24619,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.receiveWorshipAward",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24547,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.removeViceChairman",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId",
+            "targetName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24595,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.upgradeSkill",
+      "sites": [
+        {
+          "requestKeys": [
+            "type"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24631,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.guildHandler.worship",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId",
+            "worshipType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 24539,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.mailHandler.list",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31554,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.mailHandler.read",
+      "sites": [
+        {
+          "requestKeys": [
+            "mailId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31559,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.mailHandler.receive",
+      "sites": [
+        {
+          "requestKeys": [
+            "mailId",
+            "isSys"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31566,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.mailHandler.removeAllRead",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31589,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.mailHandler.send",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId",
+            "content"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31581,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.mailHandler.unReadCount",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31549,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.mailHandler.useGiftCode",
+      "sites": [
+        {
+          "requestKeys": [
+            "giftCode"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 31574,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "diedNum"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39117,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexs",
+            "attackShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39108,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.enter",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39103,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.exit",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39125,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.openInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39090,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.result",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39135,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.setDefenseTeamInfo",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndexs",
+            "shipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39095,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.newGuildBattleHandler.wintTimesRank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39130,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.playerHandler.activitySaveGem",
+      "sites": [
+        {
+          "requestKeys": [
+            "activityName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39976,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.buyActionPoint",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39940,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.buyCoin",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39945,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.buyGetBack",
+      "sites": [
+        {
+          "requestKeys": [
+            "id"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40012,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.playerHandler.buySkillPoint",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39950,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.receiveActivityAward",
+      "sites": [
+        {
+          "requestKeys": [
+            "activityName",
+            "rewardIdx"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39968,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.receiveTaskActiveAward",
+      "sites": [
+        {
+          "requestKeys": [
+            "type",
+            "point"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39927,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.receiveTaskAward",
+      "sites": [
+        {
+          "requestKeys": [
+            "taskId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39920,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.rename",
+      "sites": [
+        {
+          "requestKeys": [
+            "name"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39892,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.rollDial",
+      "sites": [
+        {
+          "requestKeys": [
+            "type"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39997,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.playerHandler.sendChat",
+      "sites": [
+        {
+          "requestKeys": [
+            "type",
+            "words"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40004,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.setPhotoImg",
+      "sites": [
+        {
+          "requestKeys": [
+            "imgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39899,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.setShipImg",
+      "sites": [
+        {
+          "requestKeys": [
+            "imgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39906,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.setTitleImg",
+      "sites": [
+        {
+          "requestKeys": [
+            "imgId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39913,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.signIn",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39935,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.topUpGoodsList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39955,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.updateFreeActivity",
+      "sites": [
+        {
+          "requestKeys": [
+            "activityName"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39983,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.useGiftCode",
+      "sites": [
+        {
+          "requestKeys": [
+            "giftCode"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39990,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.playerHandler.useItem",
+      "sites": [
+        {
+          "requestKeys": [
+            "bagIndex",
+            "itemCount"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 39960,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.pointHandler.coin",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40183,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.pointHandler.coinTen",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40188,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.pointHandler.gem",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40193,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.pointHandler.gemTen",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40198,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.practiceHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "ctime",
+            "attackTeamIndexs",
+            "attackShipIndexs",
+            "isWin"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40845,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.practiceHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexs",
+            "attackShipIndexs",
+            "ctime"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40835,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.practiceHandler.defenseTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "playerId",
+            "ctime"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40827,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.practiceHandler.match",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40812,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.practiceHandler.setDefenseInfo",
+      "sites": [
+        {
+          "requestKeys": [
+            "type",
+            "defenseTeamIndexs",
+            "defenseShipIndexs",
+            "level"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 40817,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "attackTeamId",
+            "defenderTeamId",
+            "isWin",
+            "winPlayerIdMap",
+            "seed"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41106,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "attackTeamId",
+            "defenderTeamId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41098,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.createTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndexs",
+            "shipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41051,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.dissolveTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41076,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.getInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41036,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.getReadyTeamInfos",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41041,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.joinTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamId",
+            "teamIndexs",
+            "shipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41059,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.match",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41046,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.practice",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41091,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.rank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41117,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.removeTeamMember",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamId",
+            "playerId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41068,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.prestigeBattleHandler.setAutoPractice",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamId",
+            "isAuto"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 41083,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.rankHandler.arenaTop50",
+      "sites": [
+        {
+          "requestKeys": [
+            "isDaily"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 42531,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.rankHandler.top50",
+      "sites": [
+        {
+          "requestKeys": [
+            "type"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 42538,
+          "status": "STATIC_OBSERVED"
+        },
+        {
+          "requestKeys": [
+            "type",
+            "begin",
+            "end",
+            "serverId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 42545,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.shopHandler.buy",
+      "sites": [
+        {
+          "requestKeys": [
+            "kindId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52511,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.shopHandler.refresh",
+      "sites": [
+        {
+          "requestKeys": [
+            "type"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52504,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.sixExpeditionHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "selfHpMap",
+            "selfMpMap",
+            "challengerHpMap",
+            "challengerMpMap",
+            "isWin"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52797,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixExpeditionHandler.info",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52782,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixExpeditionHandler.receive",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52808,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixExpeditionHandler.reset",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52787,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixExpeditionHandler.skip",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52792,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixPracticeHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "ctime",
+            "attackTeamIndexs",
+            "attackShipIndexs",
+            "isWin"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52852,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixPracticeHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenderId",
+            "attackTeamIndexs",
+            "attackShipIndexs",
+            "ctime"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52842,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixPracticeHandler.defenseTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "playerId",
+            "ctime"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52834,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixPracticeHandler.match",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52821,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.sixPracticeHandler.setDefenseInfo",
+      "sites": [
+        {
+          "requestKeys": [
+            "defenseTeamIndexs",
+            "defenseShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 52826,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.smapHandler.beginSmap",
+      "sites": [
+        {
+          "requestKeys": [
+            "smapId",
+            "teamIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 53521,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.smapHandler.buyMapType5Times",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 53560,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.smapHandler.endSmap",
+      "sites": [
+        {
+          "requestKeys": [
+            "star",
+            "teamIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 53529,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.smapHandler.receiveBmapAward",
+      "sites": [
+        {
+          "requestKeys": [
+            "mapId",
+            "star"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 53545,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.smapHandler.resetSmapTimes",
+      "sites": [
+        {
+          "requestKeys": [
+            "smapId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 53553,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.smapHandler.skip",
+      "sites": [
+        {
+          "requestKeys": [
+            "smapId",
+            "times"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 53537,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.tailHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "bossHp"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 54406,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.tailHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "tailType",
+            "attackTeamIndexs",
+            "attackShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 54397,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.teamHandler.equipAllArtifact",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55553,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.equipAllStone",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55523,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.equipArtifact",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55537,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.equipStone",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "bagIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55507,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.evolveEquipment",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "equipmentType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55460,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.evolveRole",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55430,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.increaseAwakeLevelUpgradeSuccessRate",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55574,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.roleBreak",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "bagIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55475,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.unEquipAllArtifact",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55560,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.unEquipAllStone",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55530,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.unEquipArtifact",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "equipmentType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55545,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.unEquipStone",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "equipmentType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55515,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeAllEquipmentMax",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55453,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeEquipment",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "equipmentType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55437,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeEquipmentMax",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "equipmentType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55445,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeRoleAwakeLevel",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55567,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeRoleAwakeSkill",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "skillKindId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55581,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeRoleSkill",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "skillKindId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55483,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.upgradeRoleStar",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55468,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.useExpItem",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex",
+            "bagIndex",
+            "itemCount"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55491,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.teamHandler.useExpItemMax",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndex"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 55500,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "CORE"
+    },
+    {
+      "route": "logic.videoHandler.getMyVideoList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58745,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.videoHandler.getVideoList",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58719,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.videoHandler.removeVideo",
+      "sites": [
+        {
+          "requestKeys": [
+            "videoId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58750,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.videoHandler.serachVideo",
+      "sites": [
+        {
+          "requestKeys": [
+            "videoId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58738,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.videoHandler.shareVideo",
+      "sites": [
+        {
+          "requestKeys": [
+            "reportId",
+            "desc"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58711,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.videoHandler.supportVideo",
+      "sites": [
+        {
+          "requestKeys": [
+            "videoId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58724,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.videoHandler.viewVideo",
+      "sites": [
+        {
+          "requestKeys": [
+            "reportId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 58731,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worldBossHandler.challenge",
+      "sites": [
+        {
+          "requestKeys": [
+            "bossHp",
+            "attackTeamIndexs",
+            "attackShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59182,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worldBossHandler.choose",
+      "sites": [
+        {
+          "requestKeys": [
+            "attackTeamIndexs",
+            "attackShipIndexs"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59174,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worldBossHandler.dmgRank",
+      "sites": [
+        {
+          "requestKeys": [
+            "type"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59191,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worldBossHandler.inspire",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59198,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worldBossHandler.openInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59169,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.apply",
+      "sites": [
+        {
+          "requestKeys": [
+            "teamIndexsMap",
+            "shipIndexsMap"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59406,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.battleInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59401,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.bet",
+      "sites": [
+        {
+          "requestKeys": [
+            "type",
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59414,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.getChampionTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "levelType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59434,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.getMyTeam",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59429,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.getTeam",
+      "sites": [
+        {
+          "requestKeys": [
+            "targetId"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59422,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.openInfo",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59396,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.worshipRank",
+      "sites": [
+        {
+          "requestKeys": [],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59448,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    },
+    {
+      "route": "logic.worshipBattleHandler.worshipStatue",
+      "sites": [
+        {
+          "requestKeys": [
+            "levelType"
+          ],
+          "requestShape": "OBJECT_KEYS_ONLY",
+          "routeBinding": "LITERAL",
+          "sourceLine": 59441,
+          "status": "STATIC_OBSERVED"
+        }
+      ],
+      "tier": "EXPANSION"
+    }
+  ],
+  "source": {
+    "bytes": 6039275,
+    "path": "client-recovered/src/project.js",
+    "sha256": "9776b6e20978d5d911bc0abb85830820bac5a3bfb8db4e65a617c5d18646a818"
+  },
+  "status": "STATIC_OBSERVED",
+  "summary": {
+    "callSites": 231,
+    "dynamicRequests": 14,
+    "tiers": {
+      "CORE": 77,
+      "DENIED_ADMIN_ONLY": 3,
+      "EXPANSION": 150
+    },
+    "uniqueRoutes": 230
+  }
+}

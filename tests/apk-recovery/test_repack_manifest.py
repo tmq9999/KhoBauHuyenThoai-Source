@@ -1,6 +1,9 @@
+import hashlib
 import json
 import subprocess
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).parents[2]
@@ -34,6 +37,9 @@ def test_recovery_ledger_pins_exact_native_repack_inputs():
 
 
 def test_validate_only_checks_real_inputs_without_creating_a_run():
+    ledger = json.loads(LEDGER.read_text(encoding="utf-8"))
+    if any(not (ROOT / ledger[key]["path"]).is_file() for key in ("original_apk", "native", "apktool")):
+        pytest.skip("requires private local APK/native/Apktool inputs, not distributed through CI")
     before = {p.name for p in (ROOT / "work" / "apk-vn").iterdir()}
     result = subprocess.run(
         [
@@ -62,5 +68,13 @@ def test_client_sources_are_exact_safe_copies_of_recovery_outputs():
         "jsb_polyfill.js": "jsb_polyfill.js",
         "project.js": "project.js",
     }
+    if any(not (recovered / source).is_file() for source in mapping.values()):
+        pytest.skip("requires original local decoder outputs; tracked source hashes are checked separately")
     for destination, source in mapping.items():
         assert (CLIENT / "src" / destination).read_bytes() == (recovered / source).read_bytes()
+
+
+def test_tracked_client_payloads_still_match_pinned_recovery_hashes():
+    ledger = json.loads(LEDGER.read_text(encoding="utf-8"))
+    for name, digest in ledger["sources"].items():
+        assert hashlib.sha256((CLIENT / "src" / name).read_bytes()).hexdigest() == digest

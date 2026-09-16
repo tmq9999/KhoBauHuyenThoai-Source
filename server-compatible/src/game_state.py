@@ -50,6 +50,15 @@ _FIRST_RECRUIT_ROLES: dict[str, dict[str, Any]] = {
 # abandoned client-local simulation cannot block the player permanently.
 _SMAP_PENDING_TTL_SECONDS = 30 * 60
 
+# UI reads these before any corresponding route is called (16133, 17126,
+# 53430, 40349, 22017). Missing counters are not the same as missing services.
+_SNAPSHOT_DEFAULTS = {
+    "vip": {"buyCoinTimes": 0, "buyActionPointTimes": 0, "buySkillPointTimes": 0,
+            "buyMapType5Times": 0, "resetSmapTimesTimesMap": {}},
+    "point": {"gemTimes": 0},
+    "friend": {"actionPointReceiveTimes": 0},
+}
+
 
 def encode_player(player: dict[str, Any]) -> str:
     raw = json.dumps(player, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -133,6 +142,19 @@ class PlayerStore:
     def has_uid(self, uid: str) -> bool:
         with self.lock:
             return self.db.execute("SELECT 1 FROM accounts WHERE uid=?", (uid,)).fetchone() is not None
+
+    @staticmethod
+    def _add_snapshot_defaults(player: dict[str, Any]) -> bool:
+        changed = False
+        for group, defaults in _SNAPSHOT_DEFAULTS.items():
+            state = player.get(group)
+            if not isinstance(state, dict):
+                continue
+            for key, value in defaults.items():
+                if key not in state:
+                    state[key] = copy.deepcopy(value)
+                    changed = True
+        return changed
 
     @staticmethod
     def _recompute_power(player: dict[str, Any]) -> bool:
@@ -321,6 +343,7 @@ class PlayerStore:
                     return player
                 cur = self.db.execute("INSERT INTO players(uid,server_id,payload) VALUES(?,?,?)", (uid, server_id, "{}"))
                 candidate = self._candidate(uid, name, int(cur.lastrowid), server_id, old_server_id)
+                self._add_snapshot_defaults(candidate)
                 self._recompute_power(candidate)
                 serialized = json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
                 self.db.execute("UPDATE players SET payload=? WHERE id=?", (serialized, cur.lastrowid))
@@ -332,7 +355,7 @@ class PlayerStore:
 
     def _normalize_existing(self, player_id: int, payload: str) -> dict[str, Any]:
         player = json.loads(payload)
-        changed = False
+        changed = self._add_snapshot_defaults(player)
         for key, value in (("experience", 0), ("nextLevelExp", 25)):
             if key not in player:
                 player[key] = value

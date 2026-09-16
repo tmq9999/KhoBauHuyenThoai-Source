@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0.02",
+  "host": "historical.invalid:20001",
+  "remoteVersionUrl": "http://historical.invalid/update/version.manifest",
+  "remoteManifestUrl": "http://historical.invalid/update/project.manifest",
+  "packageUrl": "http://historical.invalid/update/1.0.0.02",
+  "assets": {
+    "src/settings.jsc": {"md5": "11111111111111111111111111111111"},
+    "src/jsb_polyfill.jsc": {"md5": "22222222222222222222222222222222"},
+    "src/project.jsc": {"md5": "33333333333333333333333333333333"},
+    "res/unchanged.png": {"md5": "44444444444444444444444444444444"}
+  }
+}
