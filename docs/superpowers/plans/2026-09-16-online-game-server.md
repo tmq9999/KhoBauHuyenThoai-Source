@@ -1,5 +1,10 @@
 # Online Game Server Implementation Plan
 
+Execution queue superseded by
+[2026-09-17 native-client-first plan](2026-09-17-native-client-first-online-slice.md)
+at the owner's request. Preserve this file for previous task evidence and the
+remaining whole-game scope; do not restart M0 or report lab-only slices as delivery.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans
 > for inline Codex execution; use superpowers:subagent-driven-development only
 > when its tools work and tasks are isolated. Steps use checkbox syntax. The
@@ -319,6 +324,29 @@ commit this statement independently of the grant.
 
 ### Task M1.2: content import and legacy migration rehearsal
 
+Continuation: hash-verified stage/chapter staging, chapter-based normal-map
+validation and relational draft map/wave materialization have targeted
+PostgreSQL test evidence (migration `0009_normal_maps`); see
+`docs/protocol/vn-normal-map-content.md` for APK evidence. Publication, full
+mob/skill/item validation and legacy SQLite reconciliation remain separate open
+gates. Existing M2 auth/HTTP work is preserved, not treated as native acceptance.
+
+Dependency audit continuation: seven raw ordered combat/item tables now archive
+through `0010_dependency_archives`, preserving sparse/sentinel/duplicate rows.
+Transitive normal-map references and equipment recipe entity references have
+tests; conflicting skill1105010 and buff10006 remain reported blockers, not
+silently resolved rules. See `docs/protocol/vn-combat-content-dependencies.md`.
+
+Independent equipment slice: `prepare-equipment`/migration0011 validates
+evolution and material cycles and materializes equipment-only DRAFT costs with
+raw snapshots. Does not resolve combat duplicates, activate content or implement
+an upgrade route. See `docs/protocol/vn-equipment-content.md`.
+
+Acquisition continuation: strict descriptor/drop-class/box validation and
+`audit-acquisition` archive now report candidates for78 materials.177 zero-count
+rows remain unresolved; class invocation, actual probabilities and box
+acquisition still block gameplay acceptance. See `docs/protocol/vn-material-acquisition.md`.
+
 **Create:** `server-online/src/kbht_server/content/{importer,validation}.py`,
 `server-online/src/kbht_server/db/legacy_import.py`,
 `server-online/alembic/versions/0002_gameplay.py`,
@@ -341,6 +369,192 @@ commit this statement independently of the grant.
   development against fresh test data. Update docs and commit.
 
 ## M2: durable sessions, complete snapshots and adapter synchronization
+
+### Task 1: M2 negotiated Pomelo inventory transport
+
+Continue existing online package, not SQLite runner. Create
+`server-online/src/kbht_server/adapters/{pomelo_codec,pomelo_transport}.py`,
+`server-online/tests/integration/test_pomelo_inventory.py`, test-only raw WebSocket
+helpers as needed. Add explicit `serve-inventory` CLI (loopback only, separate
+port21002, no automatic DB migration or seed). Do not change existing serve.
+
+- Reuse recovered codec from server-compatible/src/pomelo_codec.py by a
+  provenance-documented package-local copy (do not import the SQLite runner).
+  Preserve original; strict JSON validation belongs to transport boundary.
+- Implement bounded stdlib asyncio WebSocket transport with explicit listen/start/
+  close lifecycle, port0 tests and loopback bind. No new package installation.
+  HTTP upgrade validates GET, path `/inventory`, upgrade headers/version/key;
+  reject non-loopback Origin, oversized headers, fragmented/unmasked/oversize
+  frames, malformed/truncated data and unsupported message types. No auth in URL.
+  Bound frame size64KiB, clients32, read timeout10s, response size1MiB, pending
+  work32; close cancels idle clients without leaking auth or engine objects.
+- Pomelo HANDSHAKE body `{sys:{type:"kbht-inventory",version:"1"},user:{token,
+  hello}}`, where hello is InventoryConnection's existing strict contract.
+  Successful response `{code:200,sys:{heartbeat:0,dict:{},protos:{}},user:<negotiation>}`.
+  HANDSHAKE_ACK empty is required before DATA. No route compression/protobuf.
+  Heartbeat after ACK returns heartbeat. Malformed/preauth input fails closed.
+- DATA REQUEST has nonzero transport request ID, route matching body envelope's
+  route. Allowed useItem passes full durable envelope unchanged to connection.
+  New explicit resync route `connector.inventoryHandler.resync`, payload `{}`,
+  returns `{code:200,result:<resync>}`. useItem returns `{code:200,...adapterResult}`.
+  Typed domain errors -> `{code:500,error:{code:<allowlisted domain code>}}` without
+  SQL/trace/token. Unexpected faults return sanitized INTERNAL_ERROR then close.
+- Run blocking DB operations off event loop with bounded concurrency and close
+  semantics: admitted command may finish; disconnect does not rerun/mint. Don't
+  generate idempotency IDs from transport request numbers.
+- TDD real socket+PostgreSQL tests: handshake/ACK, unauth/GM/malformed/oversize,
+  request ID echo, owned use/replay/tombstone, disconnect/reconnect same envelope,
+  revoked token, two accounts, clean shutdown and CLI argument safety. Tests use
+  existing explicit box fixtures, no live seeds. No APK acceptance claim.
+
+### Task 2: M2 client bridge and network-to-database E2E
+
+Create standalone ES5-compatible `client-recovered/patches/inventory-bridge.js`
+and Node tests under `tests/client/`; never change pinned project.js or stage
+the bridge into an APK yet. Implement the explicit Task1 wire contract using
+WebSocket and recovered Pomelo framing, no execution of full recovered bundle.
+
+- Connection-local protocol handshake/ACK; credentials only in handshake body,
+  never URL/log/storage. Callback API for snapshot replacement and ordered deltas.
+- Caller supplies action UUID once; queue captures exact immutable envelope
+  at first send (account identity excluded), expected aggregate/content version,
+  canonical bag index. Enqueue freezes action ID/payload; first-send version uses
+  latest synchronized version so later queued actions do not start stale.
+  One inflight mutation, bounded pending queue, retry on reconnect preserves
+  full original envelope even if resync version advanced. No new UUID on timeout.
+- Public callback interface: `createBridge({WebSocket,setTimeout,clearTimeout,
+  onSnapshot,onDelta,onReward,onError})`; `connect({url,token,hello},cb)`,
+  `useItem(actionId,bagIndex,itemCount,cb)`, `reconnect(token,cb)`, `resync(cb)`,
+  `close()`, `getState()` returning copied nonsecret bag/version/status. Never
+  expose token or mutable internal queues. Unexpected socket close keeps a
+  bounded pending action for explicit reconnect; explicit close cancels it.
+- Apply deltas only at version+1. Ignore stale/replayed deltas without rolling
+  state backward or showing reward twice; gaps request replacement snapshot.
+  Negotiated snapshots replace bag, never merge stale stacks. Schema errors,
+  expired auth, mismatch/unknown reply and excessive frames fail safely.
+- Graceful close clears credentials/timers and rejects pending promises/callbacks;
+  bounded reconnect initiated by caller, not infinite silent auto-loop. No DOM
+  or UI replacement. Module must run with injected WebSocket/timer primitives in
+  tests and on Cocos JSB later; no Node-specific imports in production JS.
+- Integration: a Python pytest launches Node bridge against the real loopback
+  Task1 listener and isolated PostgreSQL fixture. Exercise open box, response
+  loss/reconnect retry, newer snapshot then old replay, version gap/resync,
+  invalid token/ownership. Assert DB balances/ledger/receipt/events and actual
+  JS bag contents/popup behavior. Test seeded inventory clearly labelled.
+
+### Task 3: M2 release integration and native gate
+
+- Review Task1/2 jointly, run package regression, original codec/protocol tests,
+  Node tests and true socket/JS/DB E2E. Verify pinned APK/source hashes unchanged.
+- Update README/CHANGELOG/progress with runnable listener/bridge interfaces and
+  exact distinction between network E2E and native APK acceptance.
+- Inspect matching lab identity/egress and available native bridge integration
+  evidence read-only. Do not install/restart/overwrite existing player state.
+  Actual native cutover needs matching full bootstrap/session, content release,
+  client queue wiring and lab authority. Report precise remaining gate if those
+  cannot be met safely; do not mislabel seeded Node E2E as a playable online game.
+
+### Existing M2 work package
+
+### Task 4: Opt-in recovered-client inventory integration
+
+2026-09-17 continuation: implementation exists; scoped review found duplicate
+native error delivery, insufficient real-bridge consumer coverage and missing
+integration destination containment. Fix round1 addressed all three; scoped
+re-review PASS/APPROVED, Node21 and staging20 passed (5 symlink skips). The signed
+`20260916T155928Z-repack` APK excludes InventoryBridge and is not proof for this
+task. Native bootstrap/activation and device smoke remain open independently.
+
+User requested integration into recovered client. Add reviewed staged
+project transform embedding the ES5 bridge and lifecycle glue before the original
+bundle; hook the exact socket.request entry, never pinned project.js. Default
+lab bootstrap is unchanged. InventoryBridge requires LabBootstrap+LabLocalAuth,
+accepts optional PowerDisplay predecessor, and records source/patch/output hashes.
+
+Activation is explicit trusted online bootstrap only: same player/server identity,
+PostgreSQL inventory provenance, session, content version and secure action UUID
+provider. No guessed provider API or legacy SQLite token conversion. Pre-activation
+legacy behavior unchanged; once selected, prevent all legacy writes/fallback.
+Replace snapshots with tombstones via original bag merge; apply ordered deltas;
+display rewards once through a dedicated callback and suppress duplicate native
+success-callback popup. Detached/error connections stay fenced until safe attach.
+
+Stage helper must reject symlink/reparse/containment escapes, input/output aliases
+and existing independent-asset target; no blind overwrite. Test transformation
+pin counts/hash, opt-in prerequisites, actual socket interception, identity guards,
+snapshot/delta/reward/error/reconnect behavior and source immutability. No full
+recovered-bundle host execution, native install or automatic credential storage.
+
+This integrates loadable client glue, not full online login/bootstrap or native
+acceptance. Trusted bootstrap still supplies runtime context, and native smoke
+requires the matching isolated lab. Detail brief is in the plan's SDD workspace.
+
+### Remaining M2 work package
+
+### Task7: Native client form and Pomelo login integration
+
+Owner direction2026-09-17: implement actual recovered client contracts rather
+than another lab-only API. Direct source references: loginPanel/loginScene31169ff,
+serverMain51711ff, socket53945ff, playerHandler39869ff. Preserve existing plan;
+do not extend compatibility runner or manufacture a full player snapshot.
+
+- [ ] Native form `/user/register/login/serverInfo` over PostgreSQL, original
+  consumed DTOs/errors; registration metadata never grants authority. Public
+  server list from actual open/published rows, no username-based player leak.
+- [ ] Native Pomelo '/' gate/connector handshake and session binding, owned
+  getPlayers, code500 denial for unimplemented create/entry/gameplay. No invented
+  roles/maps or SQLite fallback. Full snapshot follows as separate dependency.
+- [ ] Explicit loopback native listener CLI, no seed/migrate/public exposure;
+  source-backed protocol checks, record exact reachable native flow. Owner asks
+  no further broad lab-test cycles as substitute for implementation/acceptance.
+
+### Task 6: M2 loopback account and inventory bootstrap
+
+Status2026-09-17: SERVICE/WIRE_TESTED, independent spec/quality APPROVED. Full
+backend379 passed195.69s; focused74 passed42.27s. No native or public-service
+acceptance. Evidence: docs/release/2026-09-17-online-bootstrap.md and progress log.
+Runtime auth-role provisioning and complete player/native bootstrap remain open.
+
+Continue the approved M2 auth/session/bootstrap design, separate from the legacy
+SQLite writer. No public deployment, legacy cutover, player seed or fabricated
+full snapshot. New `/v1` endpoints are an authored online adapter, not historical
+provider protocol. Existing default HTTP command listener stays unchanged.
+
+- [x] Add Argon2id password hashing with a pinned dependency. Preserve and upgrade
+  existing scrypt hashes on successful login only; unknown schemes fail closed.
+  Add account ACTIVE/LOCKED status through additive migration0013; issue/resolve
+  deny locked accounts, never reset passwords. Legacy SQLite import remains open.
+- [x] Add service + opt-in `serve-bootstrap` loopback HTTP listener (21003):
+  POST `/v1/accounts` `{login,password}` ->201 accountId (no automatic session);
+  POST `/v1/sessions` same body ->200 bearer token and expiry duration;
+  DELETE `/v1/sessions/current` bearer ->204; GET `/v1/players` bearer -> owned
+  player summaries with bounded limit/cursor; POST `/v1/inventory/bootstrap`
+  bearer + `{playerId,serverId}` -> selected current published release hello,
+  server-configured loopback inventory URL, postgres-v1 provenance, bag snapshot
+  and explicit fullPlayerSnapshot=false. Do not create missing players/items.
+- [x] Bound request bodies to4096 bytes, reject extra fields/bool IDs/non-JSON,
+  sanitize all errors (no Pydantic input echo/password/token/SQL), no-store all
+  replies. Deny browser Origin and query credentials. Bound auth attempt rate
+  and expensive concurrent hashing; no forwarded-IP trust or unbounded key cache.
+- [x] TDD real HTTP+PostgreSQL: register/login/wrong password/duplicates,
+  normalization, Argon2id + valid scrypt upgrade + malformed hashes, locked/
+  expired/revoked sessions, ownership/release change, restart, bad input and
+  redaction, denial without writes; returned hello negotiates real Pomelo
+  connection and performs existing test-funded fixed-box command exactly once.
+- [x] Run scoped/full suites, read-only review, update README/CHANGELOG/progress.
+  Native activation still needs complete player bootstrap/client login wiring;
+  report this adapter independently, no online-game completion claim.
+
+Inventory boundary continuation: opt-in NativeInventoryAdapter translates the
+native useItem fields and persists native bag/reward DTOs inside command receipts.
+Stable online bag keys reuse PostgreSQL inventory IDs; bag-only snapshot checks
+ownership and published release consistently. This does not complete full player
+snapshots, legacy identity migration, Pomelo/capability negotiation or APK smoke.
+
+Per-connection InventoryConnection now negotiates the bounded inventory capability,
+pins authenticated player/server/content and offers replacement-bag resync.
+Session state is rechecked and exact command replay survives reconnect; actual
+transport handshake wiring/client queue/full player snapshot remain pending.
 
 **Create:** `server-online/src/kbht_server/auth/{accounts,sessions}.py`,
 `server-online/src/kbht_server/adapters/{http,pomelo,snapshots,errors}.py`,
@@ -375,6 +589,12 @@ def test_snapshot_has_fields_beli_and_daily_panels_read(pg_lab):
   Invalid old session must not be able to mutate a different player. Commit docs.
 
 ## M3: complete economy, inventory and acquisition paths
+
+Bounded service continuation: `inventory.useFixedBox` now consumes a selected
+owned PostgreSQL stack and grants a staged fixed fragment recipe atomically via
+the shared ledger/reward/receipt path (migration0012). Service/HTTP tests use
+explicit opening-box fixtures. Actual acquisition, runtime release publication,
+native bag mapping and APK acceptance remain open; M3 is not complete.
 
 **Create:** `server-online/src/kbht_server/economy/{wallets,inventory,rewards,shop,purchases}.py`,
 `server-online/tests/integration/test_economy.py`,

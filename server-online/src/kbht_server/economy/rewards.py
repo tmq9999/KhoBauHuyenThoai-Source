@@ -10,6 +10,7 @@ from sqlalchemy import select
 from kbht_server.contracts import DomainFailure
 from kbht_server.db.repositories import label, positive_int
 from kbht_server.db.schema import reward_currencies, reward_grants, reward_items
+from .boxes import use_fixed_box
 
 if TYPE_CHECKING:
     from kbht_server.db.uow import UnitOfWork

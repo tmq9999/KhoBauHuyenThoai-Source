@@ -1,5 +1,10 @@
 # Codex Runbook: Kho Báu Huyền Thoại Online
 
+Active native execution moved to
+[2026-09-17 native-client-first runbook](2026-09-17-native-client-first-online-slice.md).
+This document remains historical operations/security reference; its old next-task
+instructions no longer select the next work item.
+
 Executor: Codex. Date: 2026-09-16. The owner approved the online-server direction
 and switched the execution handoff from Antigravity to Codex. This is the active
 runbook; the 2026-09-14 Antigravity document remains historical recovery evidence.

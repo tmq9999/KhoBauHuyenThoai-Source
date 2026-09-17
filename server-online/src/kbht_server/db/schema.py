@@ -30,6 +30,8 @@ accounts = Table(
     Column("id", UUID(as_uuid=True), primary_key=True),
     Column("normalized_login", String(128), nullable=False, unique=True),
     Column("password_hash", Text, nullable=False),
+    Column("status", String(16), nullable=False, server_default="ACTIVE"),
+    CheckConstraint("status IN ('ACTIVE', 'LOCKED')", name="ck_accounts_status"),
     Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
 )
 

@@ -1,5 +1,351 @@
 # KBHT Online Backend
 
+## Recovered battle computation
+
+`battles.engine.RecoveredBattleEngine(artifact).simulate_trusted(input)` runs only
+allowlisted hash-pinned recovered battle modules in a fresh bounded Node child.
+It is an internal computation API, not a gameplay route. Input must come from
+server-owned persisted roles/content, never caller-supplied stats or winner.
+Generate the ignored artifact from the pinned client:
+
+```powershell
+python tools/apk-recovery/extract-battle-modules.py --output work/battle-engine/modules.json
+```
+
+The package includes its JS driver, but not a full recovered application. The
+extractor refuses source drift, outputs outside work/, links or overwriting a
+different artifact. Repeated identical extraction is allowed. Node is required;
+missing runtime/content, tampered artifact, execution/output limits fail closed.
+
+`content.battle_bundle.battle_bundle(source,map_ids,role_ids)` selects literal
+map/mob/role/skill/buff/math dependency closure. Duplicate definitions fail by
+default; optional `vn-data-api-observed-lookup-v1` resolves only the two exact
+reviewed candidate pairs and retains both rows with provenance in the digest.
+This reproduces client lookup, not historical server intent or drop semantics.
+
+The runner preserves recovered50ms tick/action order and accepts nonzero seed
+plus bounded ordered `{zone,tick,skillId}` manual inputs. Same-tick distinct
+skills preserve input order; invalid ownership/readiness/duplicates/unused actions
+reject. Ships/auto mode remain unsupported. No route, AP debit, loot grant, map
+unlock or native battle parity is implied. See
+[battle authority contract](../docs/protocol/vn-native-battle-authority.md).
+
+## Recovered native protocol entry point
+
+`serve-native` exposes the exact native form `/user/register`, `/user/login`,
+`/user/serverInfo` and standard Pomelo gate/connector entry rather than requiring
+the APK to call `/v1`. All identity/session/server selection uses PostgreSQL;
+there is no compatibility-runner import or SQLite fallback.
+
+```powershell
+& './server-online/.venv/Scripts/python.exe' -I -m kbht_server.cli serve-native --environment test --host 127.0.0.1 --http-port 20003 --gate-port 20100 --connector-port 20101
+```
+
+Database configuration and explicit migration prerequisites below apply. This
+command never automatically creates servers/content/players. Add `--manifest`
+and `--manifest-sha256` together to serve the exact validated build metadata on
+20001 with the auth/gate/connector lifecycle. The manifest must point only to
+the fixed local metadata origin; no arbitrary asset file serving is enabled.
+Native createPlayer/entry require matching published
+`native_player_content` and an explicit opening policy; absent definitions fail
+with code500. Full battle/economy gameplay remains separate from starter entry.
+Native app errors use `{code:500,msg}` rather than JSON API error wrappers.
+ServerInfo returns public OPEN/PUBLISHED server rows and no account lookup by
+username; owned players are listed only on an authenticated connector.
+An empty published server list is maintenance, not a fabricated server1.
+
+Gate queryEntry uses uid only as a routing hint. Connector entry validates
+token, serverId and matching oldServerId; later requests recheck token/status/
+content. Host/ports are loopback and distinct. HTTP, gate and connector share
+one CLI lifecycle with partial-start cleanup. See the active
+[native-first runbook](../docs/superpowers/runbooks/2026-09-17-native-client-first-online-slice.md).
+
+## Persisted native starter state
+
+Revision0014 adds native profiles, role ownership, owned skills, equipped slots
+and map-progress relations. Native snapshots are projections, not mutable player
+JSON. Create serializes the absent-player case with the account lock, uses stable
+JS-safe IDs above10000 and emits one opening reward/ledger/receipt transaction.
+Repeated create selects the same player. Entry validates ownership, selected
+server, release and durable session, then gzip/base64-encodes the native DTO.
+First rename persists once; retrying the same name is harmless. Later paid rename
+is denied until a durable client action envelope is implemented.
+
+`content.native_players.prepare_native_player_content(connection, version,
+source, source_sha, policy)` accepts only a matching DRAFT content version and
+the pinned recovered source. It does not publish a release. Its required policy
+includes rules/provenance, power formula argument, initial owned skill levels,
+skill cap and opening-state choices which the client alone cannot prove. No
+default policy or automatic publication is supplied. A fixture policy is not
+owner approval or native gameplay acceptance.
+
+`players.creation` records starter gem/AP/skill credits through shared reward
+and wallet ledgers with role/equipment creation. `players.snapshots` reads the
+normalized state consistently and calculates time/stat fields; elapsed AP/skill
+recovery uses the source300000ms interval with ledgered bounded credits. Missing
+unimplemented catalogs stay empty and need the NativeAvailability client guards,
+not dummy priced products. Initial role/skills/growth provenance and pending
+policy decisions are in [native player contract](../docs/protocol/vn-native-player-snapshot.md).
+Dedicated runtime-role grants for these new relations are still a deployment
+prerequisite; do not expose a gateway using database-owner credentials.
+
+`db.native_permissions` provisions a separate native runtime role without
+changing the gameplay-only grants. It can authenticate/create/project/rename and
+write append-only command/reward state, but cannot modify published definitions,
+change ownership or perform persistent DDL. PostgreSQL default TEMP remains an
+explicit local limitation. `native_setup` previews by default and applies only
+with --apply, exact pinned opening policy, existing0014 schema and an unused or
+exactly matching server identity. Private credential files are exclusive and
+checked for owner/ACL/links before creation/reuse; retry never rotates passwords.
+
+Tutorial recruitment extension0015 reads exact deterministic source first-drop
+rows and stores new role claim+receipt+outbox atomically. `coin` then `gem` first
+claims are free once; later empty-payload calls and ten-draw/paid routes are denied.
+Lost replies require reconnect to resync roles, not repeated starter gifts.
+`content.native_tutorial.prepare_tutorial_release` creates a new DRAFT, while
+`activate_tutorial_release` explicitly migrates only compatible opening profiles
+with a stopped listener. Original published content and historical receipts stay
+unchanged. Runtime requires explicit `grant_native_tutorial_access` after0015.
+These functions never run automatically on listener start or a player request.
+
+## Authored bootstrap boundary
+
+The opt-in account/bootstrap contract lives in
+[online bootstrap](../docs/protocol/vn-online-bootstrap.md). It is separate from
+the recovered native client's `/user/*` HTTP interface and gate/player entry.
+New passwords use Argon2id; verified scrypt credentials can be upgraded without
+resetting them. Additive revision `0013_account_status` introduces ACTIVE/LOCKED
+accounts. Apply it through the existing explicit migration workflow before
+running updated auth services; starting a listener never migrates automatically.
+
+Do not use the gameplay runtime role to read password hashes. Auth runtime
+credential provisioning remains separate, and the owner/migration credential is
+only suitable for isolated lab tests. An inventory bootstrap cannot create a
+playable player; account creation leaves player/item state untouched.
+
+After explicit lab migration and database configuration:
+
+```powershell
+& '.\server-online\.venv\Scripts\python.exe' -I -m kbht_server.cli serve-bootstrap --environment test --host 127.0.0.1 --port 21003 --inventory-url ws://127.0.0.1:21002/inventory
+```
+
+Run `serve-inventory` separately for the selected WebSocket endpoint. Bootstrap
+does not start it or populate it. `POST /v1/accounts` accepts `{login,password}`;
+`POST /v1/sessions` returns a bearer token; `DELETE /v1/sessions/current` revokes
+it. Authenticated `GET /v1/players?limit=25&after=0` lists only owned players.
+`POST /v1/inventory/bootstrap` accepts `{playerId,serverId}` and returns the
+current published release's hello, inventory URL and bag-only snapshot. Missing
+ownership/content is denied; no test inventory is created by these endpoints.
+
+No browser Origin requests, cookies or access logs. JSON bodies are limited to
+4096 bytes with a5-second total read deadline; duplicate keys/nonfinite constants
+are rejected. Errors omit validation input, password/token and SQL. All replies
+are no-store. Auth hashing is limited to two concurrent requests and120 attempts
+per60-second process-local window. These are lab limits, not a production
+distributed rate limiter or HTTPS deployment. `serve` remains unchanged.
+
+## Loopback inventory WebSocket transport
+
+Run only after configuring the lab database and an appropriate pre-existing
+account/player/session/content release. The listener never creates them:
+
+```powershell
+& '.\server-online\.venv\Scripts\python.exe' -I -m kbht_server.cli serve-inventory --environment test --host 127.0.0.1 --port 21002
+```
+
+Database configuration is the same as other CLI commands below. Use a dedicated
+runtime role in a deployed process; migration-owner credentials are test-only.
+This command is opt-in, distinct from `serve`, binds only127.0.0.1/::1, and accepts
+binary WebSocket connections on `/inventory`. It is not internet-ready or a full
+native gate/connector/bootstrap replacement.
+
+The package-local Pomelo codec comes from the recovered compatibility codec;
+no SQLite runner is imported. Handshake/ACK precedes DATA. The handshake user
+contains token plus the bounded inventory hello; credentials never belong in
+the URL. Requests retain durable command IDs independently of Pomelo request IDs.
+`connector.inventoryHandler.resync` with empty payload returns replacement-bag
+state; useItem carries the complete negotiated command envelope.
+
+Resource limits:32 clients/32 admitted DB operations,64KiB input WebSocket
+frames,16KiB HTTP headers,1MiB replies,10s read timeout. No route compression,
+protobuf, WebSocket fragmentation or extensions. Header/frame/JSON validation
+fails closed; unexpected errors do not expose SQL/token/tracebacks. Admitted DB
+work drains on shutdown so disconnect does not mean rollback or safe reroll.
+
+The listener does not provide account login, box acquisition or a full player
+snapshot. Existing `serve` defaults remain unchanged. No client install or native
+gameplay acceptance is implied by starting this transport.
+
+## Opt-in native inventory adapter
+
+`adapters.inventory_connection.InventoryConnection(engine)` wraps the adapter
+with per-transport-connection state. `negotiate(token, hello)` authenticates and
+selects a player/release; `execute(envelope)` checks token and pinned scope before
+dispatch; `resync()` returns a fresh replacement bag; `close()` clears the binding.
+Allocate one object per connection and always close on disconnect. Do not share
+one negotiated object between unrelated clients.
+
+Hello fields are exactly `protocolVersion:1`, `capabilities:["native-inventory-v1"]`,
+`playerId`, `serverId`, `contentVersionId`. Failed negotiation clears any prior
+identity. Responses advertise only useItem, `fullPlayerSnapshot:false` and
+`snapshotMode:"replace-bag"`; they contain no token. Session expiry/revoke/rotation
+is rechecked before each operation and after collecting snapshots. An operation
+admitted before a concurrent revocation may finish; this is not atomic session
+cancellation. Tokens remain private in process memory until close, not logged or
+stored as plaintext in PostgreSQL.
+
+Reconnect must negotiate again and retry the exact original envelope if its
+response was lost. Do not rewrite command_id or expected_version. A new stale
+command returns CONFLICT; fetch a replacement bag to recover state. This class
+does not implement the client-side response ordering/queue, full player fields,
+Pomelo framing or a network listener. Existing default server exposure is unchanged.
+
+`adapters.native_inventory.NativeInventoryAdapter(engine)` exposes
+`execute(authenticated_account_id, envelope, capability="native-inventory-v1")`
+and `snapshot(account_id, player_id, server_id, content_version_id,
+capability="native-inventory-v1")`. The caller must authenticate and negotiate;
+the capability string itself grants no identity or access.
+
+Execute accepts only `logic.playerHandler.useItem` within the existing durable
+command envelope. Payload is `{bagIndex: "10001", itemCount: 1}`. Fresh online
+bag keys are canonical strings of immutable PostgreSQL inventory IDs. There is
+no implicit migration from old SQLite IDs. The fixed-box service enforces owner,
+content/version and quantity rules; translated native bag deltas/rewards are
+saved in the same receipt transaction and returned unchanged on replay.
+
+Snapshot is a consistent bag-only view with aggregate/content versions, limited
+to staged fixed-box/fragment kinds. It fails closed for unsupported metadata or
+mixed content. Reconnect code must replace the bag, not merge a full snapshot
+into stale state. This is not a full player bootstrap or Pomelo listener; no
+default route is enabled. Native command queue/version-gap handling and APK
+acceptance remain required.
+
+## Fixed material-box service
+
+Migration `0012_fixed_boxes` adds versioned `fixed_box_definitions` and
+`fixed_box_rewards`, linked to existing item definitions. A controlled content
+build may call `stage_fixed_box(connection, content_version_id, kind_id, source,
+source_sha256)` in its own transaction. The target must remain DRAFT, match the
+verified source hash and already contain every item definition with an explicit
+stack policy. This does not create limits from APK `maxNum=-1` or publish content.
+Only fixed fragment-only descriptors are supported; random/role/currency boxes
+are rejected. Restaging checks raw provenance and exact normalized reward rows.
+
+Register `economy.boxes.use_fixed_box` with `CommandExecutor` under the versioned
+core route `inventory.useFixedBox` when ready. Payload is exactly
+`{"inventory_id": 10001, "quantity": 1}`; kind/rewards/account identity cannot
+be supplied in it. IDs here are PostgreSQL inventory IDs, **not native bagIndex**.
+The handler validates ownership/content and caps a batch at100 boxes. It consumes
+only the selected stack and grants all recipe items through the existing reward
+service in one transaction with ledger, receipt and outbox.
+
+The result contains consumed identity/count, selected-stack remaining quantity,
+reward lines and affected-kind inventory records keyed by record ID. Zero rows
+become null tombstones. This is a core DTO, not the native `_temp`/bag envelope.
+Retries return the saved result; different input for one command ID conflicts.
+Failure in any reward insert rolls back the consumption too. Runtime roles get
+SELECT only on box definitions/rewards, no content edits.
+
+Default `serve` does not register this route. Test HTTP apps explicitly enable it
+with durable session authentication; that does not prove Pomelo/native parity.
+Tests fund opening boxes through test-only ledger helpers. Real box acquisition,
+combined content publication, stack policy and APK smoke are still required.
+
+Durability coverage additionally exits a disposable child process before/after
+commit, then retries through a fresh connection. The child is guarded to a
+generated schema in `kbht_test`; this is not a production crash or restore drill.
+
+## Material acquisition audit
+
+`audit-acquisition --environment test --source client-recovered/src/project.js
+--source-sha256 <verified-sha256>` uses the CLI/password-file setup below. It
+validates379 drop rows and19 box descriptors, then reports static candidates
+for78 equipment materials. W weights and R rates remain separate;177 zero-count
+rows remain unresolved. No RNG or reward allocation is performed.
+
+Source+report is stored in the existing immutable archive table under
+`material-acquisition-v1`, without a new migration. Output includes archive
+identity/digest, candidates, zero-count row count and `publishable=false`.
+Repeated/concurrent calls verify and reuse the snapshot. Exit0 means storage
+succeeded; `STATIC_CANDIDATES_ONLY` never means playable acquisition.
+
+For49902, box321 contains6 units and five direct drop rows mention positive
+quantities, but no repeatable normal map previews it. Box acquisition, class
+invocation, selection semantics and native gameplay remain required.
+
+## Equipment-only content drafts
+
+After migration `0011_equipment_content`, `prepare-equipment --environment test
+--source client-recovered/src/project.js --source-sha256 <verified-sha256>` creates
+a separate versioned DRAFT with 120 equipment definitions and 342 ingredient
+rows from the pinned source. Use the same Python CLI/password-file configuration
+as the dependency importer below. This is not a combined playable release.
+
+`content/equipment.py` checks IDs, entity types, finite numeric effects, recipe
+shape/counts and cycles in evolution and ingredient graphs. `equipment_store.py`
+stores raw snapshot, entity references, definitions and costs atomically; repeat
+preparation compares all saved rows. Six terminal `evolutionItemId=0` values
+become null pointers only in the projection. Source remains unchanged. Published
+rows are guarded; no importer publishes or activates them.
+
+Evolution cost belongs to the **target** recipe: going30101 ->30102 requires
+40102,42102,49902 at one each. The importer does not invent stack limits from
+`maxNum=-1`, populate runtime inventory, or prove materials are obtainable.
+
+## Dependency evidence import
+
+Migration `0010_dependency_archives` adds an append-only evidence store separate
+from published definitions. After migrating the selected lab database:
+
+```powershell
+$env:KBHT_DB_PASSWORD_FILE = (Resolve-Path 'work/m1-env/secrets/postgres-superuser.txt').Path
+& '.\server-online\.venv\Scripts\python.exe' -I -m kbht_server.cli import-dependencies --environment test --source client-recovered/src/project.js --source-sha256 9776b6e20978d5d911bc0abb85830820bac5a3bfb8db4e65a617c5d18646a818
+Remove-Item Env:KBHT_DB_PASSWORD_FILE
+```
+
+The command returns archive ID/digest, counts, `reference_status`, issues and
+`publishable=false`. Exit0 means evidence was stored, **not** content approval.
+Same source/format retries compare the full stored bundle; concurrent imports
+deduplicate. Different audit semantics require a new format version. No game
+server, content version or player state is changed. The CLI roundtrip is tested
+against generated isolated PostgreSQL schemas; do not use a live service DSN.
+
+`content/dependencies.py` traverses normal-map mob/skill/buff references and
+equipment/consumable entity references. `content/archive.py` stores original
+ordered cells and the audit together. Conflicting IDs remain explicit blockers.
+The archive is not a normalized battle ruleset; drop interpretation, recipe
+cycles, effect semantics and native acceptance are pending.
+
+`prepare-content --environment test --import-id <UUID>` prepares a DRAFT from
+an existing content import. Migration `0009_normal_maps` adds immutable chapter
+source archives plus `normal_map_definitions` and `normal_map_waves`, scoped by
+content version. Preparation checks chapter references, numeric fields and
+unique ranks, then stores ordered stages/waves in the same transaction as the
+version. Replay compares complete projections and rejects altered, missing or
+extra rows. Its versioned digest covers both source tables, not a validated
+battle ruleset. Old smap-only imports require repeating `import-content` with
+the same verified source to backfill chapters; old drafts are not overwritten.
+`publish_source` rejects publication pending the gameplay validation gate;
+no game-server status or active version is modified by preparation.
+
+The raw archive retains all 1,623 stage rows and 69 chapter rows. Chapter
+`type=1` selects 376 stages across 27 chapters, with 3,722 mob-wave references.
+The strict source parser only permits missing trailing cells when explicitly
+requested for a sparse table; it preserves absent keys rather than inventing
+values. Mob and skill definitions and reward semantics are not validated by
+the map projection. Published map/wave rows reject mutation.
+
+`adapters.commands.CommandAdapter(executor, routes)` accepts a trusted account
+UUID and a negotiated command envelope (command_id, player_id, server_id, route,
+expected_version, content_version_id, payload). Routes default to denied.
+Identity must be supplied by a separate authentication layer, never by the
+request body. `adapters.http.create_app` exposes `/health` and `/v1/command`;
+the loopback `serve` CLI resolves bearer tokens with `SessionService.resolve`.
+It registers no gameplay handlers by default. The separate `serve-bootstrap`
+listener exposes account/session endpoints; there is no full Pomelo bootstrap or
+complete player snapshot adapter. No online-native cutover is implied. Public exposure
+remains blocked on M2 authentication/security and runtime-role provisioning.
+
 Python package `kbht_server` exposes a PostgreSQL command executor, ledger,
 transactional outbox consumer and database CLI. The native HTTP/Pomelo lab
 entry point is documented separately in [server-compatible](../server-compatible/README.md).

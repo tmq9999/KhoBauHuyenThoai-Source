@@ -7,4 +7,5 @@ pydantic==2.13.5
 uvicorn==0.53.0
 pytest==9.1.1
 redis==6.4.0
+argon2-cffi==25.1.0
 setuptools==80.9.0

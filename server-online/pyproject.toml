@@ -15,6 +15,7 @@ dependencies = [
   "pydantic==2.13.5",
   "uvicorn==0.53.0",
   "redis==6.4.0",
+  "argon2-cffi==25.1.0",
 ]
 
 [project.optional-dependencies]
@@ -27,7 +28,7 @@ kbht-server = "kbht_server.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-kbht_server = ["db/alembic/*.py", "db/alembic/versions/*.py", "db/alembic/versions/*.sql"]
+kbht_server = ["db/alembic/*.py", "db/alembic/versions/*.py", "db/alembic/versions/*.sql", "battles/*.cjs"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

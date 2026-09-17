@@ -48,3 +48,50 @@ flags. It formats power labels without changing combat values or pinned source.
 The signed run `work/apk-vn/20260915T212249Z-repack` has been built and its JSC /
 manifest payloads verified, but it has not been installed or native-smoke-tested.
 Use that run's manifest when testing it; keep the installed artifact separate.
+
+## Opt-in online inventory bridge
+
+```powershell
+pwsh -NoProfile -File client-recovered/scripts/build-repacked.ps1 -LabBootstrap -LabLocalAuth -PowerDisplay -InventoryBridge -Sign
+```
+
+This embeds the ES5 bridge and guarded socket hook into staged `project.js`,
+then encodes it into the existing `project.jsc` payload. The reference source
+is not modified. `-InventoryBridge` requires both lab flags; `-PowerDisplay`
+is optional. `-ValidateOnly` checks build inputs, not this transform or APK boot.
+
+The trusted bootstrap must call `window.kbhtInventoryIntegration.attach(options)`
+with `inventoryIdentity="postgres-v1"`, matching player/server selection, a
+session token and content hello, loopback inventory URL, WebSocket/timer deps,
+`getPlayer`, `sync`, `showRewards`, `nextActionId` and `suspendLegacy` callbacks.
+There is no automatic credential conversion or full online bootstrap. Before
+activation legacy behavior remains unchanged; after activation legacy requests
+are fenced, including after detach, to prevent two independent database writers.
+Only the bounded fixed-box useItem path is supported. Pair every APK with its own
+generated manifest and use only the isolated lab; packaging is not native proof.
+
+The latest packaged bridge artifact is
+`work/apk-vn/20260916T190803Z-repack/artifacts/vn-recovered-debug-signed.apk`
+(SHA-256 `afc37cc3fb77846c6e477fa6c507110e7405f9754c53d8f159a2542abddbd79c`).
+Its matching manifest is under the same run's `lab-bootstrap/project.manifest`.
+The payload was decoded and compared with the staged source after signing;
+device install/launch was not performed.
+
+## Native PostgreSQL availability guards
+
+`-NativeAvailability` is an opt-in patch for the full native gateway path. It
+requires `-LabBootstrap -LabLocalAuth` and may include `-PowerDisplay`. It cannot
+be combined with the separate inventory-only `-InventoryBridge` protocol.
+The existing lab flags select local endpoints and skip the historical SDK;
+they do not select SQLite or turn this into native gameplay acceptance.
+
+This stages five narrow consumer guards: unavailable server lists, rejected
+gate/connector responses, empty normal-shop badges and absent paid-card catalog
+entries. No products, balances, roles or rewards are invented. Existing populated
+catalog rendering remains unchanged. The original source is hash-pinned and
+untouched; every replacement requires an exact unique source pin and the expected
+prior local-auth/display transformation.
+
+`tools/apk-recovery/prepare-native-availability.py --help` exposes the staging
+interface; the builder invokes it within its validated source stage. Creating
+an artifact with these guards does not activate PostgreSQL player entry by itself.

@@ -1,0 +1,14 @@
+{
+  "rules_id": "kbht-native-opening-v1",
+  "origin": "owner-approved-new-rule",
+  "provenance": "docs/protocol/vn-native-opening-v1.md; owner directed immediate implementation after the proposed role-level power argument, skill100101 level1, skill cap15 and hidden class63 on 2026-09-17",
+  "power_second_argument": 1,
+  "skills": {"100101": 1},
+  "awake_skills": {},
+  "skill_point_cap": 15,
+  "hide_role_class_ids": [63],
+  "opening_state": "unavailable-zero-v1",
+  "owned_attribute_rule": "source-preview-floor-growth-v1",
+  "recovery_policy": "source-300000ms-v1",
+  "open_days": 1
+}

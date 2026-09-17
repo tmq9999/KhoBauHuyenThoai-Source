@@ -31,8 +31,8 @@ def test_worker_receipts_upgrade_preserves_committed_commands(empty_pg_engine):
         before = [connection.execute(select(table)).mappings().all()
                   for table in (wallets, wallet_ledger, ledger_postings, command_receipts, outbox_events)]
 
-    assert apply_migrations(empty_pg_engine) == "0006_outbox_delivery"
-    assert apply_migrations(empty_pg_engine) == "0006_outbox_delivery"
+    assert apply_migrations(empty_pg_engine) == "0013_account_status"
+    assert apply_migrations(empty_pg_engine) == "0013_account_status"
     with empty_pg_engine.connect() as connection:
         after = [connection.execute(select(table)).mappings().all()
                  for table in (wallets, wallet_ledger, ledger_postings, command_receipts, outbox_events)]
@@ -51,7 +51,7 @@ def test_migration_creates_authoritative_core_tables(empty_pg_engine):
     assert {"accounts", "players", "wallets", "ledger_transactions", "ledger_postings",
             "wallet_ledger", "command_receipts", "outbox_events", "alembic_version"} <= names
     with empty_pg_engine.connect() as connection:
-        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalars().all() == ["0006_outbox_delivery"]
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalars().all() == ["0013_account_status"]
 
 
 def test_migration_is_idempotent_and_invariants_are_read_only(empty_pg_engine):
@@ -101,3 +101,26 @@ def test_cli_module_executes_parser_and_help():
     assert result.returncode == 0
     assert "migrate" in result.stdout
     assert "check-invariants" in result.stdout
+
+
+def test_account_status_upgrade_preserves_passwords_and_session_history(empty_pg_engine):
+    from uuid import uuid4
+    cfg = Config()
+    cfg.set_main_option('script_location', str(Path(migrations.__file__).with_name('alembic')))
+    account, session = uuid4(), uuid4()
+    with empty_pg_engine.begin() as connection:
+        cfg.attributes['connection'] = connection
+        alembic_command.upgrade(cfg, '0012_fixed_boxes')
+        connection.execute(text("INSERT INTO accounts(id,normalized_login,password_hash) VALUES (:id,'migration-fixture','scrypt$fixture$preserve')"), {'id': account})
+        connection.execute(text("INSERT INTO sessions(id,account_id,token_hash,expires_at,revoked_at) VALUES (:id,:account,:hash,now()+interval '1 hour',now())"), {'id': session, 'account': account, 'hash': 'a'*64})
+        before_account = connection.execute(text('SELECT * FROM accounts')).mappings().one()
+        before_session = connection.execute(text('SELECT * FROM sessions')).mappings().one()
+    assert apply_migrations(empty_pg_engine) == '0013_account_status'
+    with empty_pg_engine.connect() as connection:
+        after = dict(connection.execute(text('SELECT * FROM accounts')).mappings().one())
+        assert after.pop('status') == 'ACTIVE'
+        assert after == dict(before_account)
+        assert connection.execute(text('SELECT * FROM sessions')).mappings().one() == before_session
+    with pytest.raises(DBAPIError):
+        with empty_pg_engine.begin() as connection:
+            connection.execute(text("UPDATE accounts SET status='UNKNOWN'"))

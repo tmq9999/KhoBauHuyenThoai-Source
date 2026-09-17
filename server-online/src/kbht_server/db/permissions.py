@@ -10,6 +10,7 @@ READ_TABLES = (
     "ledger_transactions", "ledger_postings", "wallet_ledger", "command_receipts",
     "inventory_items", "inventory_ledger", "reward_grants", "reward_items",
     "reward_currencies", "outbox_events", "worker_receipts", "outbox_deliveries", "alembic_version",
+    "fixed_box_definitions", "fixed_box_rewards",
 )
 INSERT_TABLES = (
     "ledger_transactions", "ledger_postings", "wallet_ledger", "command_receipts",

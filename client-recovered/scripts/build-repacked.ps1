@@ -4,6 +4,9 @@ param(
     [switch]$LabBootstrap,
     [switch]$LabLocalAuth,
     [switch]$PowerDisplay,
+    [switch]$InventoryBridge,
+    [switch]$NativeAvailability,
+    [switch]$NativeBattle,
     [switch]$Sign,
     [switch]$CreateDebugKeystore,
     [string]$KeystorePath,
@@ -14,6 +17,10 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 if ($LabLocalAuth -and -not $LabBootstrap) { throw '-LabLocalAuth requires -LabBootstrap' }
 if ($PowerDisplay -and -not ($LabBootstrap -and $LabLocalAuth)) { throw '-PowerDisplay requires -LabBootstrap -LabLocalAuth' }
+if ($InventoryBridge -and -not ($LabBootstrap -and $LabLocalAuth)) { throw '-InventoryBridge requires -LabBootstrap -LabLocalAuth' }
+if ($NativeAvailability -and -not ($LabBootstrap -and $LabLocalAuth)) { throw '-NativeAvailability requires -LabBootstrap -LabLocalAuth' }
+if ($NativeAvailability -and $InventoryBridge) { throw '-NativeAvailability uses the native gateway; do not combine with inventory-only bridge' }
+if ($NativeBattle -and -not $NativeAvailability) { throw '-NativeBattle requires -NativeAvailability' }
 $clientRoot = Split-Path -Parent $PSScriptRoot
 $root = Split-Path -Parent $clientRoot
 $ledgerPath = Join-Path $clientRoot 'recovery-ledger.json'
@@ -22,6 +29,7 @@ $workRoot = Join-Path $root 'work/apk-vn'
 $sourceRoot = Join-Path $clientRoot 'src'
 $encoder = Join-Path $root 'tools/apk-recovery/encode-jsc.py'
 $labBootstrapHelper = Join-Path $root 'tools/apk-recovery/prepare-lab-bootstrap.py'
+$patchStager = Join-Path $root 'tools/apk-recovery/stage-client-patches.py'
 $payloadVerifier = Join-Path $PSScriptRoot 'verify-apk-payloads.py'
 
 function Resolve-ProjectPath([string]$RelativePath) {
@@ -109,6 +117,33 @@ try {
                 }
                 $report.Add("- Power-display patch SHA-256: $((Get-FileHash -LiteralPath (Join-Path $clientRoot 'patches/power-display.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
                 $report.Add("- Power-display staged project SHA-256: $((Get-FileHash -LiteralPath (Join-Path $sourceStage 'project.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+            }
+            if ($InventoryBridge) {
+                $powerArg = @()
+                if ($PowerDisplay) { $powerArg = @('--power-display') }
+                Invoke-Recorded 'python tools/apk-recovery/stage-client-patches.py integrate-inventory-bridge --stage-root <source-stage> --input <staged-project> --reference-project <pinned-project> --bridge <bridge> --integration <glue>' {
+                    & python $patchStager integrate-inventory-bridge --stage-root $sourceStage --input (Join-Path $sourceStage 'project.js') --reference-project (Join-Path $sourceRoot 'project.js') --bridge (Join-Path $clientRoot 'patches/inventory-bridge.js') --integration (Join-Path $clientRoot 'patches/inventory-integration.js') @powerArg
+                }
+                $report.Add('- Inventory bridge staging: enabled (bridge + guarded socket integration prepended to staged project.js only).')
+                $report.Add("- Inventory bridge patch SHA-256: $((Get-FileHash -LiteralPath (Join-Path $clientRoot 'patches/inventory-bridge.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                $report.Add("- Inventory integration patch SHA-256: $((Get-FileHash -LiteralPath (Join-Path $clientRoot 'patches/inventory-integration.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                $report.Add("- Inventory-integrated staged project SHA-256: $((Get-FileHash -LiteralPath (Join-Path $sourceStage 'project.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+            }
+            if ($NativeAvailability) {
+                $nativeArgs = @()
+                if ($PowerDisplay) { $nativeArgs = @('--power-display') }
+                Invoke-Recorded 'python tools/apk-recovery/prepare-native-availability.py --stage-root <source-stage> --input <staged-project> --reference <pinned-source> --patch <availability-patch>' {
+                    & python (Join-Path $root 'tools/apk-recovery/prepare-native-availability.py') --stage-root $sourceStage --input (Join-Path $sourceStage 'project.js') --reference (Join-Path $sourceRoot 'project.js') --patch (Join-Path $clientRoot 'patches/native-availability.js') @nativeArgs
+                }
+                $report.Add("- Native availability patch SHA-256: $((Get-FileHash -LiteralPath (Join-Path $clientRoot 'patches/native-availability.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                $report.Add("- Native availability staged project SHA-256: $((Get-FileHash -LiteralPath (Join-Path $sourceStage 'project.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                if ($NativeBattle) {
+                    Invoke-Recorded 'python tools/apk-recovery/prepare-native-battle.py <pinned-native-stage>' {
+                        & python (Join-Path $root 'tools/apk-recovery/prepare-native-battle.py') --stage-root $sourceStage --input (Join-Path $sourceStage 'project.js') --reference (Join-Path $sourceRoot 'project.js') --patch (Join-Path $clientRoot 'patches/battle-command.js') --availability-patch (Join-Path $clientRoot 'patches/native-availability.js') @nativeArgs
+                    }
+                    $report.Add("- Native battle patch SHA-256: $((Get-FileHash -LiteralPath (Join-Path $clientRoot 'patches/battle-command.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                    $report.Add("- Native battle staged project SHA-256: $((Get-FileHash -LiteralPath (Join-Path $sourceStage 'project.js') -Algorithm SHA256).Hash.ToLowerInvariant())")
+                }
             }
         }
         $sourceForBuild = $sourceStage

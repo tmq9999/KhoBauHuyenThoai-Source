@@ -2,7 +2,220 @@
 
 All notable project changes are recorded here. Dates use `YYYY-MM-DD`.
 
+## [Checkpoint] - 2026-09-17
+
+- Preserve the accumulated PostgreSQL content/auth/player/tutorial/inventory
+  implementation, native client staging patches, documentation and existing checks.
+- Include durable native SMAP sessions, frozen submissions, authoritative reports,
+  ledger settlement and source-derived AP/XP recovery changes through migration0016.
+- Include NativeBattle staging with battle/scene identity and copied request scope.
+- This is a source snapshot, not an online release or a native battle acceptance.
+  No tests, emulator, database activation or APK build were run for this commit,
+  as requested by the owner. Ignored secrets/runtime artifacts remain local.
+
 ## [Unreleased] - 2026-09-16
+
+### Recovered combat implementation (2026-09-17)
+
+- Added a source-pinned45-module battle extractor and bounded isolated runner
+  using recovered AI/action/formula/buff/scheduler/RNG code, not auto-win logic.
+- Added map/role combat dependency closure, strict ambiguity refusal and an
+  explicit client-lookup compatibility policy retaining both duplicate records.
+- Added ordered end-tick manual skill inputs with ownership/MP/cooldown guards.
+  Report hashes bind input/artifact/results; no client star is trusted.
+- Added an unstaged ES5 battleId/seed/action recorder with frozen settlement
+  retries and stale-battle identity guards; native scene hooks remain pending.
+- Native battle bridge, persistent settlement/rewards and map10107 acceptance
+  remain unfinished; computation results do not unlock stages or mint loot.
+
+### Native opening activation preparation (2026-09-17)
+
+- Added explicit native-opening-v1 policy for the proposed role-level power
+  argument, initial skill100101 level1, skill cap15 and unavailable class63.
+- Added SHA-pinned native metadata/config/notice serving in serve-native on20001;
+  no compatibility runner or general file server is required.
+- Backed up empty-player kbht_dev before additive0014 migration; checked all
+  ledger invariants afterward. No existing SQLite player state was converted.
+- Activated the scoped opening release and verified actual APK register/login/
+  create/home/first rename against PostgreSQL using a restricted runtime role.
+  Recruitment/battle/map1-7 are not included in this native opening milestone.
+- Added source-backed once-only tutorial recruitment implementation for Zoro/
+  Nami, new immutable tutorial release and scoped opening-player migration path;
+  general paid/free repeated/ten draws remain unavailable.
+- Activated0015 tutorial release with backup and preserved one existing player;
+  actual APK showed Zoro/Nami and PostgreSQL persisted exactly two tutorial claims.
+
+### Native persisted starter implementation (2026-09-17)
+
+- Added normalized native player/profile/role/skill/equipment storage and
+  source-pinned immutable starter definitions in additive migration0014.
+- Added atomic create/replay, compressed native entry snapshot, one-time first
+  rename and ledgered AP/skill recovery. No SQLite fallback or fabricated catalog.
+- Ambiguous opening rules require explicit versioned policy; no active release
+  is automatically published and no native gameplay acceptance is implied.
+
+### Native-client-first execution reset (2026-09-17)
+
+- Added the owner-requested replacement spec, plan and runbook with native
+  10106->10107 acceptance and explicit PostgreSQL-only gameplay requirements.
+- Updated active project routing to the new execution set; preserved older
+  artifacts and database/security requirements rather than deleting history.
+- Began source-backed `/user/*` and native Pomelo adapter implementation; a
+  standalone `/v1` or SQLite tutorial result no longer counts as product delivery.
+- Added PostgreSQL native form authentication, standard gate/connector handshake,
+  authenticated owned-player listing and combined `serve-native` lifecycle.
+  Full native snapshot/create/entry and gameplay are explicitly unavailable.
+- Added opt-in NativeAvailability staged consumer guards for unavailable server
+  lists, failed gate/connector binding and genuinely absent shop/card catalogs;
+  no fabricated products or player state. Inventory-only bridge mode stays separate.
+
+### Native lab execution (2026-09-17)
+
+- Installed the inventory-bridge APK by data-preserving upgrade on the named
+  KBHT-Online-Lab MuMu instance; verified installed SHA256 and retained first
+  install time. Original installed APK and SQLite backup retained privately.
+- Observed native registration/login, server selection, tutorial Luffy and home
+  rename UI against the existing SQLite compatibility runner. PostgreSQL native
+  activation is not claimed; no public deployment or physical-device action.
+
+### M2 account and inventory bootstrap (2026-09-17)
+
+- Added hash-pinned Argon2id dependency for the opt-in online
+  account/bootstrap boundary; existing package versions remain unchanged.
+- Added account ACTIVE/LOCKED status through additive migration0013, durable
+  session lock checks and successful-login upgrade of existing scrypt hashes.
+- Added opt-in loopback `serve-bootstrap` for registration, login, logout,
+  owned-player listing and inventory-release selection. Bounded JSON, fixed
+  redacted errors, no-store replies and auth concurrency limits apply.
+- Documented the separate authored `/v1` bootstrap contract and remaining
+  native `/user/*`/player-entry integration boundary. No automatic cutover.
+
+### Native inventory packaging continuation (2026-09-17)
+
+- Added opt-in staged bridge/socket integration to the recovered APK builder;
+  activation requires trusted PostgreSQL identity and fences the legacy writer.
+- Fixed duplicate native error notifications using the bridge error channel;
+  added real-bridge/copied native-consumer coverage for bag updates and rewards.
+- Integration staging now requires an explicit root and rejects escaping paths,
+  reparse points and multiply-linked destinations before writing.
+- Kept the real socket/Node/PostgreSQL E2E in the backend test suite and archived
+  the obsolete root-suite duplicate so recovery collection needs no backend DB.
+- Corrected documentation to distinguish the inventory-only Pomelo listener,
+  packaged hook and still-missing full online bootstrap/native acceptance.
+- Built and payload-verified signed lab artifact
+  `20260916T190803Z-repack` with InventoryBridge; APK SHA-256 is
+  `afc37cc3fb77846c6e477fa6c507110e7405f9754c53d8f159a2542abddbd79c`.
+
+### Loopback Pomelo inventory transport and client bridge
+
+- Added explicit `serve-inventory` WebSocket/Pomelo listener backed by the
+  negotiated PostgreSQL command boundary, with bounded work and strict framing.
+- Added source-provenance codec copy, sanitized failure/cleanup paths and
+  canonical WebSocket-length rejection; no runtime dependency on SQLite runner.
+- Added standalone ES5 inventory bridge with action queue, exact replay on
+  reconnect, replacement snapshots and conflict resync. Opt-in staged integration
+  is described above; full native login/gameplay support remains incomplete.
+### Negotiated inventory connection state
+
+- Added per-connection token/capability/player/content negotiation, revalidation
+  before commands and replacement bag snapshots for reconnect/resync.
+- Failed renegotiation clears prior identity; commands cannot switch selected
+  scope. Reconnect preserves original command IDs/versions for durable replay.
+- Added expiry/revoke/rotation, cross-account, stale-state and concurrent-close
+  tests. No listener, default gameplay route or fabricated full player bootstrap
+  is introduced; admitted operations are not forcibly cancelled by later revoke.
+### Native inventory DTO boundary
+
+- Added opt-in capability-gated native useItem payload translation, stable
+  fresh-online bag IDs, bag deltas/tombstones and reward popup fields.
+- Saves translated responses inside the command receipt transaction; later
+  retries cannot reflect unrelated newer inventory. Added scoped consistent
+  snapshots with ownership, release and unsupported-metadata checks.
+- Verified PostgreSQL and authenticated HTTP behavior, not native runtime.
+  Legacy bag migration, transport negotiation, full snapshots and acquisition
+  remain pending; default gameplay exposure is unchanged.
+### Atomic fixed material-box consumption
+
+- Added source-verified fixed fragment-box staging and migration0012 with
+  versioned recipe foreign keys and published-content mutation guards.
+- Added an owned-inventory box-use command: consume and grant rewards share the
+  existing transaction, item ledgers, receipt and outbox. Retries cannot duplicate
+  rewards; failed grants restore the consumed box through rollback.
+- Added core inventory snapshots/tombstones, batch validation, runtime read-only
+  content grants, concurrency and authenticated HTTP service tests. This is not
+  a native bag adapter or a box-acquisition implementation; default routes stay
+  disabled and no live/player data was seeded.
+- Added before/after-commit process-loss tests and reward-capacity rollback
+  coverage for fixed-box commands; test children only target isolated schemas.
+### Material source and drop structure audit
+
+- Added strict fixed/random descriptor parsing with separate weight/rate fields,
+  drop-class/box reference and cycle validation, and per-material static sources.
+- Added `audit-acquisition` using immutable PostgreSQL snapshots and exact
+  replay/concurrent deduplication. Existing dependency archive behavior retained.
+- 177 zero-count rows remain unresolved;78 materials have static candidates, not
+  verified gameplay sources. No inventory grant or gameplay route is enabled.
+### Equipment recipe drafts
+
+- Added validated equipment evolution/material graphs and atomic PostgreSQL
+  `prepare-equipment` drafts via migration `0011_equipment_content`.
+- Preserves source snapshots and target-tier costs; rejects invalid references,
+  quantities, cyclic recipes and replay drift. Published projections are guarded.
+- Combat duplicate IDs remain unresolved. No upgrades, inventory grants,
+  acquisition rules, server activation or APK gameplay acceptance are implied.
+
+### Combat/item source archives and reference audit
+
+- Added safe !0/!1 literal handling and an ordered archive preserving sparse
+  fields, sentinel ID0 and duplicate rows without executing recovered JS.
+- Added transitive normal-map mob/skill/buff reference checks and equipment
+  recipe/consumable entity checks, including summoned mobs and child skills.
+- Added immutable PostgreSQL migration `0010_dependency_archives` and
+  `import-dependencies` CLI with exact replay checks and concurrent deduplication.
+- Reported conflicting source skill1105010 and buff10006; skill1105010 is
+  reachable from normal maps. No last-wins rule, reward or gameplay success is
+  invented. Archives may store blocked evidence; publication remains disabled.
+
+### Normal-map content drafts
+
+- Added explicit sparse chapter parsing and chapter-based normal-map ordering,
+  including stage 10107 and the transition from chapter 1 to chapter 2.
+- Added migration `0009_normal_maps` for chapter provenance, versioned map
+  definitions and ordered mob-wave references. Preparation is atomic and
+  replay-checked; published projections reject changes. Existing smap-only
+  imports can backfill chapters from the same hash-verified source.
+- Raw drop values are preserved without inventing reward quantities. Full
+  mob/skill/item validation, battle simulation, publication and APK gameplay
+  acceptance remain pending; no existing player data is migrated or rewritten.
+
+### Transport documentation correction
+
+- Clarified the existing loopback HTTP command transport and durable session
+  service. HTTP register/login endpoints are not implemented; account operations
+  are Python-only and native authentication remains pending. Removed the
+  unsupported endpoint/test-count claim from the previous draft documentation.
+
+### Draft content release boundary
+
+- Added replayable PostgreSQL draft preparation and CLI roundtrip tests.
+- Removed automatic server opening from source publication: raw APK tables are
+  not validated gameplay releases. Draft replay rejects changed release hashes.
+- Native gameplay, session service and release activation remain incomplete.
+
+### Online command boundary
+
+- Added strict command-envelope validation and explicit route allowlisting
+  before the PostgreSQL executor; account identity cannot come from wire fields.
+- Added real-database tests for replay, wrong ownership and invalid envelopes.
+  The test purchase is internal, not an exposed gameplay route. Session
+  authentication, HTTP/Pomelo listeners and native verification remain open.
+
+### Online content preparation
+
+- Added hash-verified non-executing APK table reader and in-memory map release
+  preparation, with source and importer tooling tests including stage 10107.
+- This is not PostgreSQL content publication, graph validation or native map
+  acceptance. No running server or player state is changed by these helpers.
 
 ### Inventory and reward transaction foundation
 
