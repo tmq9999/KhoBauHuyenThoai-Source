@@ -6,6 +6,9 @@ All notable project changes are recorded here. Dates use `YYYY-MM-DD`.
 
 ### Online backend delivery documentation
 
+- Added a dedicated Antigravity handoff with a copy-paste continuation prompt,
+  read order, T01/T02 starting points and repository-backed progress checkpoints.
+
 - Added the owner-requested APK-derived online backend spec, 20-task execution
   plan and operational runbook, grounded in checkpoint990d8dc.
 - Reconciled stale battle/settlement status and identified actual production

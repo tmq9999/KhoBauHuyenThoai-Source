@@ -1,5 +1,7 @@
 # Runbook triển khai backend online Kho Báu Huyền Thoại
 
+**Tiếp tục bằng Antigravity:** dùng [bản bàn giao và prompt khởi động](2026-09-17-antigravity-online-backend.md).
+
 Ngày 2026-09-17. Baseline code `990d8dc`. Đây là runbook hiện hành theo yêu cầu
 owner: thực hiện backend dựa trên APK, không Lab/emulator/ADB và không test vòng vo.
 

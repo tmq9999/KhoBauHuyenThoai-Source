@@ -20,6 +20,10 @@ Android glue, resources và thư viện native Cocos 1.10.3 từ APK gốc.
 
 ## Kiến trúc kỹ thuật
 
+**Bàn giao Antigravity:** mở [runbook tiếp tục triển khai](docs/superpowers/runbooks/2026-09-17-antigravity-online-backend.md)
+và copy prompt đầu file vào phiên mới. Bản này trỏ đúng spec/plan hiện hành,
+khôi phục progress và bắt đầu T01/T02 nếu chưa được thực hiện.
+
 Hướng triển khai hiện hành: [đặc tả backend online](docs/superpowers/specs/2026-09-17-apk-online-backend-delivery.md),
 [plan 20 task](docs/superpowers/plans/2026-09-17-apk-online-backend-delivery.md) và
 [runbook triển khai](docs/superpowers/runbooks/2026-09-17-apk-online-backend-delivery.md).
