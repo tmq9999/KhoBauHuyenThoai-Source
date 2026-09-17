@@ -4,6 +4,18 @@ All notable project changes are recorded here. Dates use `YYYY-MM-DD`.
 
 ## [Checkpoint] - 2026-09-17
 
+### Online backend delivery documentation
+
+- Added the owner-requested APK-derived online backend spec, 20-task execution
+  plan and operational runbook, grounded in checkpoint990d8dc.
+- Reconciled stale battle/settlement status and identified actual production
+  gaps: loot semantics, wider role stats, durable native commands, local-only
+  database/gateway/client configuration and release operations.
+- Routed active instructions to the new set. No Lab/emulator/ADB or broad test
+  loops; existing evidence remains historical and owner APK acceptance is separate.
+- Documented proposed production commands as unimplemented interfaces, not
+  runnable deployment instructions. No service/device/DB change in this update.
+
 - Preserve the accumulated PostgreSQL content/auth/player/tutorial/inventory
   implementation, native client staging patches, documentation and existing checks.
 - Include durable native SMAP sessions, frozen submissions, authoritative reports,

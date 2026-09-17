@@ -1,5 +1,9 @@
 # Native-client-first online slice
 
+> Historical execution set. Superseded by the owner-requested
+> [APK online backend delivery spec](2026-09-17-apk-online-backend-delivery.md).
+> Preserve this file as prior constraints/evidence; do not resume its Lab workflow.
+
 Status: owner-directed execution spec, 2026-09-17.
 
 The owner's request to write this set and immediately implement approves this

@@ -1,5 +1,11 @@
 # Recovered native APK client (partial)
 
+Current owner directive: no Lab/emulator/ADB execution. Follow the
+[online backend runbook](../docs/superpowers/runbooks/2026-09-17-apk-online-backend-delivery.md).
+Commands/artifacts below are retained as historical build references, not the
+current task queue. `-OnlineProfile` is planned, not implemented. NativeBattle
+staging exists in checkpoint990d8dc but does not establish APK battle acceptance.
+
 Status: **EDITABLE_CLIENT_BUILD_PARTIAL**, native lab boot/home confirmed. The editable `src/` files are exact copies of recovered JavaScript. Android resources, smali, and native libraries remain from the original Apktool tree; native C++ and a complete Cocos project have not been recovered.
 
 For the installed MuMu client and working game runner, use the

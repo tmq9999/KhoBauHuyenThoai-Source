@@ -20,9 +20,14 @@ Android glue, resources và thư viện native Cocos 1.10.3 từ APK gốc.
 
 ## Kiến trúc kỹ thuật
 
-Hướng triển khai hiện hành: [native-client-first spec](docs/superpowers/specs/2026-09-17-native-client-first-online-slice.md),
-[plan](docs/superpowers/plans/2026-09-17-native-client-first-online-slice.md) và
-[runbook](docs/superpowers/runbooks/2026-09-17-native-client-first-online-slice.md).
+Hướng triển khai hiện hành: [đặc tả backend online](docs/superpowers/specs/2026-09-17-apk-online-backend-delivery.md),
+[plan 20 task](docs/superpowers/plans/2026-09-17-apk-online-backend-delivery.md) và
+[runbook triển khai](docs/superpowers/runbooks/2026-09-17-apk-online-backend-delivery.md).
+Owner yêu cầu thực hiện code sản phẩm, không Lab/emulator/ADB hoặc broad test
+loops. Bộ mới chỉ rõ phần code đã có, luật loot/chiêu mộ còn thiếu, command retry,
+gameplay, admin và production transport/backup. Bước thực thi kế tiếp là T01/T02.
+Lệnh production và `-OnlineProfile` trong runbook là giao diện cần triển khai,
+chưa có trong CLI/builder hiện tại. Chưa triển khai public server.
 Server phải nhận đúng form `/user/*` và Pomelo của APK phục hồi, với PostgreSQL
 là nguồn ghi duy nhất. Runner SQLite chỉ được giữ làm bằng chứng lịch sử.
 Rules mở đầu đã được version hóa tại
@@ -30,10 +35,13 @@ Rules mở đầu đã được version hóa tại
 server mới được nêu rõ, không nhận là backend lịch sử đã phục hồi.
 Lần chạy native PostgreSQL và artifact tương ứng được ghi tại
 [native PostgreSQL opening](docs/release/2026-09-17-native-postgres-opening.md).
-Mốc này là tạo nhân vật/home/đổi tên; chưa bao gồm chiêu mộ và chiến đấu1-7.
+Mốc opening là tạo nhân vật/home/đổi tên; chiêu mộ tutorial có
+[báo cáo riêng](docs/release/2026-09-17-native-postgres-tutorial.md).
+Chiến đấu1-7 chưa được nghiệm thu native.
 Engine chiến đấu đang dùng module logic phục hồi từ chính client, tách khỏi
-SDK/UI và chạy theo seed/input xác định. Chưa nối settlement/native battle;
-mô phỏng chạy được không đồng nghĩa APK đã qua ải1-7.
+SDK/UI và chạy theo seed/input xác định. Code settlement và staged native battle
+đã có trong snapshot990d8dc; còn luật loot, publication/production và nghiệm thu
+APK. Mô phỏng chạy được không đồng nghĩa APK đã qua ải1-7.
 Patch `-NativeAvailability` bảo vệ consumer gốc khi server đang bảo trì hoặc
 catalog shop/thẻ chưa có; không tạo hàng giả và không thay cho triển khai gameplay.
 Chi tiết cờ build ở [client-recovered/README](client-recovered/README.md).

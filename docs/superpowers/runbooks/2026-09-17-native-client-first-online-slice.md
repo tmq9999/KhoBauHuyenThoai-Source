@@ -1,5 +1,9 @@
 # Native-client-first execution runbook
 
+> Historical only. Owner's newer directive prohibits Lab/emulator/ADB and broad
+> test loops. Use the [online backend runbook](2026-09-17-apk-online-backend-delivery.md)
+> instead; commands below are retained as historical context, not current authority.
+
 This replaces lab-runner acceptance for the current slice. Read the spec,
 `AGENTS.md`, route matrix and this runbook before execution.
 

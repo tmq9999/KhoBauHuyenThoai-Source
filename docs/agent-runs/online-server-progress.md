@@ -1,5 +1,26 @@
 # Online server execution progress
 
+## 2026-09-17 - Owner-directed source checkpoint and online delivery reset
+
+- Committed all then-visible nonignored changes as990d8dc (144 files), including
+  prior PostgreSQL content/auth/inventory/player/tutorial/battle work and existing
+  checks. Pushed feat/native-game-entry to the existing private GitHub repository;
+  remote SHA990d8dc1e63c10f0fa9234d81c4af68deb44d533 matched local.
+- No test suite, Lab/emulator/ADB, service, DB activation or APK build was run
+  for this checkpoint. Ignored runtime artifacts/secrets/APKs remain local.
+  Historical SDK-shaped literals were already on remote; this push did not change
+  pinned project.js or make the repository public. Public distribution remains
+  a separate decision; no history rewrite or credential use was performed.
+- Added the owner-requested2026-09-17-apk-online-backend-delivery spec,20-task
+  plan and runbook. Reconciled stale missing-settlement statements against code;
+  mapped actual remaining production configuration, reward, progression and
+  native command gaps. Detailed expansion subtasks use real inventory handlers.
+- Current policy: product implementation, no Lab/emulator/ADB or broad test loops.
+  Preserve historical evidence, mark unexecuted checks NOT_RUN, owner performs
+  APK acceptance. No production-ready or complete-game claim.
+- Next execution: T01 route status/consumer reconciliation, then T02 durable
+  native command bridge. No return to the old bootstrap/lab task queue.
+
 ## 2026-09-17 - Source combat implementation continuation
 
 - Resumed native-first Task3 after actual PG tutorial. Preserved dirty feature

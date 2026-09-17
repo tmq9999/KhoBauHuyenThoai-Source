@@ -1,5 +1,10 @@
 # Native-client-first online slice Implementation Plan
 
+> Historical checkpoint queue. Continue from the
+> [APK online backend delivery plan](2026-09-17-apk-online-backend-delivery.md).
+> Old open checkboxes are not a current implementation inventory; settlement
+> and staged battle hooks were included in checkpoint990d8dc.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Connect the recovered APK's real form/Pomelo contracts to PostgreSQL and deliver a native-confirmed 10106-to-10107 vertical slice.

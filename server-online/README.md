@@ -1,5 +1,15 @@
 # KBHT Online Backend
 
+## Current execution set (2026-09-17)
+
+Use the [online backend spec](../docs/superpowers/specs/2026-09-17-apk-online-backend-delivery.md),
+[20-task plan](../docs/superpowers/plans/2026-09-17-apk-online-backend-delivery.md)
+and [runbook](../docs/superpowers/runbooks/2026-09-17-apk-online-backend-delivery.md).
+No Lab/emulator/ADB or broad test loops are requested. Existing setup/testing
+commands below are reference, not an instruction to run them on every task.
+The baseline CLI still supports only test/development and loopback; production
+profile/activation/operations commands in the new runbook are planned interfaces.
+
 ## Recovered battle computation
 
 `battles.engine.RecoveredBattleEngine(artifact).simulate_trusted(input)` runs only
